@@ -4,4 +4,8 @@ use anchor_lang::prelude::*;
 pub enum MarketError {
     #[msg("Account passed in incorrectly")]
     WrongAccount,
+    #[msg("Amount overflow")]
+    AmountOverflow,
+    #[msg("Amount underflow")]
+    AmountUnderflow,
 }

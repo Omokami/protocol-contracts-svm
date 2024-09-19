@@ -23,3 +23,6 @@ idl-build = [
 anchor-lang.workspace = true
 anchor-spl.workspace = true
 spl-transfer-hook-interface.workspace = true
+mpl-token-metadata = { workspace = true }
+mpl-bubblegum = { workspace = true }
+num_enum = { workspace = true }

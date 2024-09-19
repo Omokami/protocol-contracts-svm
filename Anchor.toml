@@ -5,13 +5,13 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-rarible_marketplace = "sALEeD9VGNquoGSXvUAKLeVbXdjiPCb3FTuTm1xSLod"
+rarible_marketplace = "rAREXWkxUP9Cr91tRVJ29NumDAEKvNpDWZNqcfSwBNG"
 
 [programs.devnet]
-rarible_marketplace = "sALEeD9VGNquoGSXvUAKLeVbXdjiPCb3FTuTm1xSLod"
+rarible_marketplace = "rAREXWkxUP9Cr91tRVJ29NumDAEKvNpDWZNqcfSwBNG"
 
 [programs.mainnet]
-rarible_marketplace = "sALEeD9VGNquoGSXvUAKLeVbXdjiPCb3FTuTm1xSLod"
+rarible_marketplace = "rAREXWkxUP9Cr91tRVJ29NumDAEKvNpDWZNqcfSwBNG"
 
 [registry]
 url = "https://api.apr.dev"

@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
-use program_utils::get_bump_in_seed_form;
 
-use crate::{state::*, utils::transfer_sol};
+use crate::{state::*, utils::{get_bump_in_seed_form, transfer_sol}};
 
 #[derive(Accounts)]
 #[instruction()]

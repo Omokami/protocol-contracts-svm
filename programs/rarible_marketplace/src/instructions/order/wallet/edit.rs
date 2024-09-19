@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
-use program_utils::{get_bump_in_seed_form, lamport_transfer};
 
-use crate::{state::*, utils::transfer_sol};
+use crate::{state::*, utils::{get_bump_in_seed_form, lamport_transfer, transfer_sol}};
 
 #[derive(Accounts)]
 #[instruction(amount_change: u64, is_increase: bool)]

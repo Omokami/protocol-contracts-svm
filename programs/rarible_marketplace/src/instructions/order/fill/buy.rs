@@ -4,12 +4,8 @@ use anchor_spl::{
     token::{Mint, Token, TokenAccount},
 };
 use mpl_token_metadata::accounts::Metadata;
-use program_utils::{lamport_transfer, pnft::utils::get_is_pnft, ExtraTransferParams};
 
-use crate::{
-    state::*,
-    utils::{parse_remaining_accounts, pay_royalties, transfer_nft},
-};
+use crate::{state::*, utils::{lamport_transfer, metaplex::pnft::utils::get_is_pnft, parse_remaining_accounts_pnft, pay_royalties, transfer_nft, ExtraTransferParams, TransferNft}};
 
 #[derive(Accounts)]
 #[instruction()]
@@ -99,10 +95,8 @@ pub struct FillBuyOrder<'info> {
 /// buyer is the owner of the order account and is transferring sol to seller via bidding wallet
 #[inline(always)]
 pub fn handler<'info>(ctx: Context<'_, '_, '_, 'info, FillBuyOrder<'info>>) -> Result<()> {
-    let parsed_accounts = parse_remaining_accounts(
+    let parsed_accounts = parse_remaining_accounts_pnft(
         ctx.remaining_accounts.to_vec(),
-        ctx.accounts.initializer.key(),
-        ctx.accounts.order.fees_on,
         false,
         Some(1),
     );
@@ -120,30 +114,35 @@ pub fn handler<'info>(ctx: Context<'_, '_, '_, 'info, FillBuyOrder<'info>>) -> R
             ctx.remaining_accounts.get(4).cloned()
         };
 
+    let transfer_params = ExtraTransferParams {
+        owner_token_record: pnft_params.token_record,
+        dest_token_record: buyer_token_record,
+        authorization_rules: pnft_params.authorization_rules,
+        authorization_rules_program: pnft_params.authorization_rules_program.clone(),
+        authorization_data: None,
+    };
+    let transfer_accounts = TransferNft {
+        authority: ctx.accounts.initializer.to_account_info(),
+        payer: ctx.accounts.initializer.to_account_info(),
+        token_owner: ctx.accounts.initializer.to_account_info(),
+        token: ctx.accounts.seller_nft_ta.to_account_info(),
+        destination_owner: ctx.accounts.buyer.to_account_info(),
+        destination: ctx.accounts.buyer_nft_ta.to_account_info(),
+        mint: ctx.accounts.nft_mint.to_account_info(),
+        metadata: ctx.accounts.nft_metadata.to_account_info(),
+        edition: ctx.accounts.nft_edition.to_account_info(),
+        system_program: ctx.accounts.system_program.to_account_info(),
+        instructions: ctx.accounts.sysvar_instructions.to_account_info(),
+        token_program: ctx.accounts.token_program.to_account_info(),
+        ata_program: ctx.accounts.associated_token_program.to_account_info(),
+    };
+
+    let transfer_ctx = CpiContext::new(ctx.accounts.token_program.to_account_info(), transfer_accounts);
     // transfer nft
     transfer_nft(
-        ctx.accounts.initializer.to_account_info(),
-        ctx.accounts.initializer.to_account_info(),
-        ctx.accounts.initializer.to_account_info(),
-        ctx.accounts.buyer.to_account_info(),
-        ctx.accounts.nft_mint.to_account_info(),
-        ctx.accounts.nft_metadata.to_account_info(),
-        ctx.accounts.nft_edition.to_account_info(),
-        ctx.accounts.seller_nft_ta.to_account_info(),
-        ctx.accounts.buyer_nft_ta.to_account_info(),
-        ctx.accounts.system_program.to_account_info(),
-        ctx.accounts.sysvar_instructions.to_account_info(),
-        ctx.accounts.token_program.to_account_info(),
-        ctx.accounts.associated_token_program.to_account_info(),
-        ctx.accounts.token_metadata_program.to_account_info(),
-        ExtraTransferParams {
-            owner_token_record: pnft_params.token_record,
-            dest_token_record: buyer_token_record,
-            authorization_rules: pnft_params.authorization_rules,
-            authorization_rules_program: pnft_params.authorization_rules_program.clone(),
-            authorization_data: None,
-        },
-        &[],
+        transfer_ctx,
+        transfer_params,
+        1
     )?;
 
     lamport_transfer(

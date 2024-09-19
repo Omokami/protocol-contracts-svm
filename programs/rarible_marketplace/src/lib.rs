@@ -7,10 +7,8 @@ pub mod utils;
 
 use instructions::*;
 
-// mrkTzoWMVEBJ3AUrgd2eXNLXrnBuhhQRQyxahtaeTie - prod program id
-// tsthbYzhRwHcVgoGJVv87QFFa13V7fLnKMrpgFMEgRa - staging program id
-
-declare_id!("mrkTzoWMVEBJ3AUrgd2eXNLXrnBuhhQRQyxahtaeTie");
+// rAREXWkxUP9Cr91tRVJ29NumDAEKvNpDWZNqcfSwBNG - program id
+declare_id!("rAREXWkxUP9Cr91tRVJ29NumDAEKvNpDWZNqcfSwBNG");
 
 #[program]
 pub mod listings {
@@ -20,6 +18,12 @@ pub mod listings {
     #[inline(always)]
     pub fn init_market(ctx: Context<InitMarket>) -> Result<()> {
         instructions::market::init::handler(ctx)
+    }
+
+    /// initializer a new market
+    #[inline(always)]
+    pub fn verify_mint(ctx: Context<VerifyMint>) -> Result<()> {
+        instructions::market::verify_mint::handler(ctx)
     }
 
     /// initializer a new bid
@@ -96,40 +100,5 @@ pub mod listings {
         increase: bool,
     ) -> Result<()> {
         instructions::wallet::edit::handler(ctx, amount_change, increase)
-    }
-
-    /*
-        WIP: Compressed instructions for testing, will merge under other buy/sell instructions once complete
-    */
-    #[inline(always)]
-    pub fn compressed_init_sell_order<'info>(
-        ctx: Context<'_, '_, '_, 'info, CompressedInitSellOrder<'info>>,
-        data: CompressedOrderData,
-    ) -> Result<()> {
-        instructions::compressed_draft::sell::init::handler(ctx, data)
-    }
-
-    #[inline(always)]
-    pub fn compressed_fill_sell_order<'info>(
-        ctx: Context<'_, '_, '_, 'info, CompressedFillSellOrder<'info>>,
-        data: CompressedFillOrderData,
-    ) -> Result<()> {
-        instructions::compressed_draft::sell::fill::handler(ctx, data)
-    }
-
-    #[inline(always)]
-    pub fn compressed_close_sell_order<'info>(
-        ctx: Context<'_, '_, '_, 'info, CompressedCloseSellOrder<'info>>,
-        data: CompressedOrderData,
-    ) -> Result<()> {
-        instructions::compressed_draft::sell::close::handler(ctx, data)
-    }
-
-    #[inline(always)]
-    pub fn compressed_fill_buy_order<'info>(
-        ctx: Context<'_, '_, '_, 'info, CompressedFillBuyOrder<'info>>,
-        data: CompressedFillOrderData,
-    ) -> Result<()> {
-        instructions::compressed_draft::buy::fill::handler(ctx, data)
     }
 }

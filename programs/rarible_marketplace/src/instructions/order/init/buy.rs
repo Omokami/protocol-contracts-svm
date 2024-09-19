@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{state::*, utils::parse_remaining_accounts};
+use crate::state::*;
 
 use super::InitOrderData;
 
@@ -43,22 +43,9 @@ pub struct InitBuyOrder<'info> {
     pub system_program: Program<'info, System>,
 }
 
-//remaining accounts
-// 0 token_record or default,
-// 1 authorization_rules or default,
-// 2 authorization_rules_program or default
-
 #[inline(always)]
 pub fn handler(ctx: Context<InitBuyOrder>, data: InitOrderData) -> Result<()> {
     msg!("Initialize a new buy order: {}", ctx.accounts.order.key());
-
-    let parsed_accounts = parse_remaining_accounts(
-        ctx.remaining_accounts.to_vec(),
-        ctx.accounts.initializer.key(),
-        true,
-        false,
-        None,
-    );
 
     let clock = Clock::get()?;
     // create a new order with size 1
@@ -74,7 +61,7 @@ pub fn handler(ctx: Context<InitBuyOrder>, data: InitOrderData) -> Result<()> {
         data.size,
         data.price,
         OrderState::Ready.into(),
-        parsed_accounts.fees_on,
+        true,
     );
 
     emit_cpi!(Order::get_edit_event(

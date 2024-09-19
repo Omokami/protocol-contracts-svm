@@ -5,11 +5,11 @@ pub const MARKET_VERSION: u8 = 1;
 
 #[account()]
 pub struct Market {
-    /// market account version
+    /// market account version, used to conditionally parse accounts if changes are made to the struct
     pub version: u8,
-    /// mint of the index to which the NFTs belong to
+    /// identifying of the index to which the NFTs belong to (WNS Collection, Metaplex collection, separate hash)
     pub market_identifier: Pubkey,
-    /// initializer of the market - can edit and close the market
+    /// initializer of the market - can edit and close the market, admin key
     pub initializer: Pubkey,
     /// state representing the market - open/closed
     pub state: u8,
@@ -30,6 +30,11 @@ pub enum MarketState {
 #[repr(u8)]
 pub enum MarketEditType {
     Init,
+}
+
+#[account()]
+pub struct MintVerification {
+    pub verified: u8,
 }
 
 #[event]

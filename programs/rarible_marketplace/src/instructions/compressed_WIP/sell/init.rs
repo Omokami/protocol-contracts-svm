@@ -1,8 +1,6 @@
 use anchor_lang::prelude::*;
 
 use mpl_bubblegum::instructions::{TransferCpiAccounts, TransferInstructionArgs};
-use program_utils::bubblegum::compressed_transfer;
-use vault::state::{Appraisal, APPRAISAL_SEED};
 
 use crate::{instructions::compressed_draft::CompressedOrderData, state::*};
 

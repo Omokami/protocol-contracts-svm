@@ -3,7 +3,6 @@ use anchor_lang::{
     solana_program::{program::invoke, system_instruction::transfer},
 };
 use mpl_bubblegum::instructions::{TransferCpiAccounts, TransferInstructionArgs};
-use program_utils::bubblegum::compressed_transfer;
 
 use crate::{instructions::compressed_draft::CompressedFillOrderData, state::*};
 
