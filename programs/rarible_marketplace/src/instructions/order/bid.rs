@@ -2,23 +2,19 @@ use anchor_lang::prelude::*;
 
 use crate::state::*;
 
-use super::InitOrderData;
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub struct BidData {
+    pub nonce: Pubkey,
+    pub price: u64,
+    pub size: u64,
+}
 
 #[derive(Accounts)]
-#[instruction(data: InitOrderData)]
+#[instruction(data: BidData)]
 #[event_cpi]
-pub struct InitBuyOrder<'info> {
+pub struct BidNft<'info> {
     #[account(mut)]
     pub initializer: Signer<'info>,
-    #[account(
-        mut,
-        // make sure bidding wallet has enough balance to place the order
-        constraint = wallet.balance >= data.price.checked_mul(data.size).unwrap(),
-        seeds = [WALLET_SEED,
-        initializer.key().as_ref()],
-        bump,
-    )]
-    pub wallet: Box<Account<'info, Wallet>>,
     #[account(
         constraint = Market::is_active(market.state),
         seeds = [MARKET_SEED,
@@ -44,16 +40,18 @@ pub struct InitBuyOrder<'info> {
 }
 
 #[inline(always)]
-pub fn handler(ctx: Context<InitBuyOrder>, data: InitOrderData) -> Result<()> {
+pub fn handler(ctx: Context<BidNft>, data: BidData) -> Result<()> {
     msg!("Initialize a new buy order: {}", ctx.accounts.order.key());
 
     let clock = Clock::get()?;
+
+    // Transfer bid funds TODO;
+    
     // create a new order with size 1
     Order::init(
         &mut ctx.accounts.order,
         ctx.accounts.market.key(),
         ctx.accounts.initializer.key(),
-        ctx.accounts.wallet.key(),
         data.nonce,
         ctx.accounts.nft_mint.key(),
         clock.unix_timestamp,

@@ -1,4 +1,4 @@
-use crate::utils::{TransferNft, ExtraTransferParams};
+use crate::utils::metaplex::mplx_transfer::{TransferMetaplexNft, ExtraTransferParams};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program::invoke_signed;
 use anchor_lang::Key;
@@ -11,7 +11,7 @@ use mpl_token_metadata::{
 use super::utils::get_is_nft;
 
 pub fn metaplex_transfer<'info>(
-    ctx: CpiContext<'_, '_, '_, 'info, TransferNft<'info>>,
+    ctx: CpiContext<'_, '_, '_, 'info, TransferMetaplexNft<'info>>,
     params: ExtraTransferParams<'info>,
     amount: u64,
 ) -> Result<()> {
@@ -26,10 +26,10 @@ pub fn metaplex_transfer<'info>(
     let mut builder = TransferBuilder::new();
     builder
         .authority(ctx.accounts.authority.to_account_info().key())
-        .token_owner(ctx.accounts.token_owner.to_account_info().key())
-        .token(ctx.accounts.token.to_account_info().key())
+        .token_owner(ctx.accounts.source_owner.to_account_info().key())
+        .token(ctx.accounts.source_ta.to_account_info().key())
         .destination_owner(ctx.accounts.destination_owner.to_account_info().key())
-        .destination_token(ctx.accounts.destination.to_account_info().key())
+        .destination_token(ctx.accounts.destination_ta.to_account_info().key())
         .mint(ctx.accounts.mint.to_account_info().key())
         .metadata(ctx.accounts.metadata.to_account_info().key())
         .payer(ctx.accounts.payer.to_account_info().key());
@@ -40,9 +40,9 @@ pub fn metaplex_transfer<'info>(
 
     let mut account_infos = if edition_key.is_some() {
         vec![
-            ctx.accounts.token.to_account_info(),
-            ctx.accounts.token_owner.to_account_info(),
-            ctx.accounts.destination.to_account_info(),
+            ctx.accounts.source_ta.to_account_info(),
+            ctx.accounts.source_owner.to_account_info(),
+            ctx.accounts.destination_ta.to_account_info(),
             ctx.accounts.destination_owner.to_account_info(),
             ctx.accounts.mint.to_account_info(),
             ctx.accounts.metadata.to_account_info(),
@@ -56,9 +56,9 @@ pub fn metaplex_transfer<'info>(
         ]
     } else {
         vec![
-            ctx.accounts.token.to_account_info(),
-            ctx.accounts.token_owner.to_account_info(),
-            ctx.accounts.destination.to_account_info(),
+            ctx.accounts.source_ta.to_account_info(),
+            ctx.accounts.source_owner.to_account_info(),
+            ctx.accounts.destination_ta.to_account_info(),
             ctx.accounts.destination_owner.to_account_info(),
             ctx.accounts.mint.to_account_info(),
             ctx.accounts.metadata.to_account_info(),
@@ -72,7 +72,6 @@ pub fn metaplex_transfer<'info>(
     };
 
     if let Some(standard) = metadata.token_standard {
-        msg!("standard triggered");
         if standard == TokenStandard::ProgrammableNonFungible {
             //1. add to builder
             builder
@@ -90,7 +89,6 @@ pub fn metaplex_transfer<'info>(
         match config {
             ProgrammableConfig::V1 { rule_set } => {
                 if let Some(rule_set) = rule_set {
-                    msg!("ruleset triggered");
                     //safe to unwrap here, it's expected
                     let authorization_rules = params.authorization_rules.unwrap();
                     let rules_program = params.authorization_rules_program.unwrap();

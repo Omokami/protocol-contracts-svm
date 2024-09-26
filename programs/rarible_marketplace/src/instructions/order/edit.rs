@@ -2,12 +2,16 @@ use anchor_lang::prelude::*;
 
 use crate::state::*;
 
-use super::EditBuyOrderData;
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
+pub struct EditOrderData {
+    pub new_price: u64,
+    pub new_size: u64,
+}
 
 #[derive(Accounts)]
-#[instruction(data: EditBuyOrderData)]
+#[instruction(data: EditOrderData)]
 #[event_cpi]
-pub struct EditBuyOrder<'info> {
+pub struct EditOrder<'info> {
     #[account(mut)]
     pub initializer: Signer<'info>,
     #[account(
@@ -29,29 +33,34 @@ pub struct EditBuyOrder<'info> {
         bump,
     )]
     pub order: Box<Account<'info, Order>>,
-    #[account(
-        mut,
-        // make sure bidding wallet has enough balance to place the order
-        constraint = wallet.balance >= data.new_price.checked_mul(data.new_size).unwrap(),
-        seeds = [WALLET_SEED,
-        initializer.key().as_ref()],
-        bump,
-    )]
-    pub wallet: Box<Account<'info, Wallet>>,
     pub system_program: Program<'info, System>,
 }
 
 #[inline(always)]
-pub fn handler(ctx: Context<EditBuyOrder>, data: EditBuyOrderData) -> Result<()> {
+pub fn handler(ctx: Context<EditOrder>, data: EditOrderData) -> Result<()> {
     msg!("Edit buy order: {}", ctx.accounts.order.key());
     let clock = Clock::get()?;
-    // edit the order with size
-    Order::edit_buy(
-        &mut ctx.accounts.order,
-        data.new_price,
-        data.new_size,
-        clock.unix_timestamp,
-    );
+
+    let order_side: u8 = ctx.accounts.order.side;
+
+    if order_side == 1 {
+        // edit the order without size
+        Order::edit_sell(
+            &mut ctx.accounts.order,
+            data.new_price,
+            clock.unix_timestamp,
+        );
+    } else if order_side == 0 {
+        // edit the order with size
+        Order::edit_buy(
+            &mut ctx.accounts.order,
+            data.new_price,
+            data.new_size,
+            clock.unix_timestamp,
+        );
+    } else {
+        // error, shouldnt happen
+    }
 
     emit_cpi!(Order::get_edit_event(
         &mut ctx.accounts.order.clone(),

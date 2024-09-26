@@ -1,38 +1,25 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::*;
 
-use mpl_token_metadata::accounts::Metadata;
-
 use crate::utils::metaplex::pnft::{
     transfer::metaplex_transfer,
-    utils::{get_is_pnft, AuthorizationDataLocal},
+    utils::AuthorizationDataLocal,
 };
 
-#[derive(Accounts)]
-pub struct TransferAccounts<'info> {
-    pub bs_authority: AccountInfo<'info>,
-    pub authority: AccountInfo<'info>,
-    pub payer: AccountInfo<'info>,
-    pub source: AccountInfo<'info>,
-    pub source_ta: AccountInfo<'info>,
-    pub destination_owner: AccountInfo<'info>,
-    pub destination_ta: AccountInfo<'info>,
-    pub mint: AccountInfo<'info>,
-    pub system_program: AccountInfo<'info>,
-    pub instructions: AccountInfo<'info>,
-    pub token_program: AccountInfo<'info>,
-    pub ata_program: AccountInfo<'info>,
-    pub rent: AccountInfo<'info>,
+pub struct MetaplexAdditionalTransferAccounts<'info> {
+    pub metadata: AccountInfo<'info>,
+    pub edition: AccountInfo<'info>,
+    pub extra_accounts: ExtraTransferParams<'info>,
 }
 
 #[derive(Accounts)]
-pub struct TransferNft<'info> {
+pub struct TransferMetaplexNft<'info> {
     pub authority: AccountInfo<'info>,
     pub payer: AccountInfo<'info>,
-    pub token_owner: AccountInfo<'info>,
-    pub token: AccountInfo<'info>,
+    pub source_owner: AccountInfo<'info>,
+    pub source_ta: AccountInfo<'info>,
     pub destination_owner: AccountInfo<'info>,
-    pub destination: AccountInfo<'info>,
+    pub destination_ta: AccountInfo<'info>,
     pub mint: AccountInfo<'info>,
     pub metadata: AccountInfo<'info>,
     pub edition: AccountInfo<'info>,
@@ -50,17 +37,12 @@ pub struct ExtraTransferParams<'info> {
     pub authorization_rules_program: Option<AccountInfo<'info>>,
 }
 
-pub fn transfer_nft<'info>(
-    ctx: CpiContext<'_, '_, '_, 'info, TransferNft<'info>>,
+pub fn transfer_metaplex_nft<'info>(
+    ctx: CpiContext<'_, '_, '_, 'info, TransferMetaplexNft<'info>>,
     params: ExtraTransferParams<'info>,
     amount: u64,
+    is_pnft: bool,
 ) -> Result<()> {
-    let metadata_res = Metadata::safe_deserialize(&ctx.accounts.metadata.data.borrow()[..]);
-    let is_pnft = if let Ok(metadata) = metadata_res {
-        get_is_pnft(&metadata)
-    } else {
-        false
-    };
     if is_pnft {
         metaplex_transfer(ctx, params, amount)?;
     } else {
@@ -68,8 +50,8 @@ pub fn transfer_nft<'info>(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program,
                 Transfer {
-                    from: ctx.accounts.token,
-                    to: ctx.accounts.destination,
+                    from: ctx.accounts.source_ta,
+                    to: ctx.accounts.destination_ta,
                     authority: ctx.accounts.authority,
                 },
                 ctx.signer_seeds,

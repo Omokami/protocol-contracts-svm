@@ -12,6 +12,7 @@ declare_id!("rAREXWkxUP9Cr91tRVJ29NumDAEKvNpDWZNqcfSwBNG");
 
 #[program]
 pub mod listings {
+
     use super::*;
 
     /// initializer a new market
@@ -28,77 +29,44 @@ pub mod listings {
 
     /// initializer a new bid
     #[inline(always)]
-    pub fn init_buy_order(ctx: Context<InitBuyOrder>, data: InitOrderData) -> Result<()> {
-        instructions::order::init::buy::handler(ctx, data)
+    pub fn bid(ctx: Context<BidNft>, data: BidData) -> Result<()> {
+        instructions::order::bid::handler(ctx, data)
     }
 
     /// initializer a new listing
     #[inline(always)]
-    pub fn init_sell_order<'info>(
-        ctx: Context<'_, '_, '_, 'info, InitSellOrder<'info>>,
-        data: InitOrderData,
+    pub fn list<'info>(
+        ctx: Context<'_, '_, '_, 'info, ListNft<'info>>,
+        data: ListData,
     ) -> Result<()> {
-        instructions::order::init::sell::handler(ctx, data)
+        instructions::order::list::handler(ctx, data)
     }
 
     /// edit a bid
     #[inline(always)]
-    pub fn edit_buy_order(ctx: Context<EditBuyOrder>, data: EditBuyOrderData) -> Result<()> {
-        instructions::order::edit::buy::handler(ctx, data)
-    }
-
-    /// edit a listing
-    #[inline(always)]
-    pub fn edit_sell_order(ctx: Context<EditSellOrder>, data: EditSellOrderData) -> Result<()> {
-        instructions::order::edit::sell::handler(ctx, data)
-    }
-
-    /// fill a bid
-    #[inline(always)]
-    pub fn fill_buy_order<'info>(
-        ctx: Context<'_, '_, '_, 'info, FillBuyOrder<'info>>,
-    ) -> Result<()> {
-        instructions::order::fill::buy::handler(ctx)
+    pub fn edit_order(ctx: Context<EditOrder>, data: EditOrderData) -> Result<()> {
+        instructions::order::edit::handler(ctx, data)
     }
 
     /// fill a listing
     #[inline(always)]
-    pub fn fill_sell_order<'info>(
-        ctx: Context<'_, '_, '_, 'info, FillSellOrder<'info>>,
+    pub fn fill_order<'info>(
+        ctx: Context<'_, '_, '_, 'info, FillOrder<'info>>,
     ) -> Result<()> {
-        instructions::order::fill::sell::handler(ctx)
+        instructions::order::fill::handler(ctx)
     }
 
     /// cancel a buy order
     #[inline(always)]
-    pub fn close_buy_order(ctx: Context<CloseBuyOrder>) -> Result<()> {
-        instructions::order::close::buy::handler(ctx)
+    pub fn cancel_bid(ctx: Context<CancelBid>) -> Result<()> {
+        instructions::order::cancel_bid::handler(ctx)
     }
 
     /// cancel a sell order
     #[inline(always)]
-    pub fn close_sell_order<'info>(
-        ctx: Context<'_, '_, '_, 'info, CloseSellOrder<'info>>,
+    pub fn cancel_listing<'info>(
+        ctx: Context<'_, '_, '_, 'info, CancelListing<'info>>,
     ) -> Result<()> {
-        instructions::order::close::sell::handler(ctx)
-    }
-
-    /*
-        For placing bids on collections
-    */
-    /// initializer a new bidding wallet
-    #[inline(always)]
-    pub fn init_wallet(ctx: Context<InitBiddingWallet>, amount: u64) -> Result<()> {
-        instructions::wallet::init::handler(ctx, amount)
-    }
-
-    /// edit a bidding wallet
-    #[inline(always)]
-    pub fn edit_wallet(
-        ctx: Context<EditBiddingWallet>,
-        amount_change: u64,
-        increase: bool,
-    ) -> Result<()> {
-        instructions::wallet::edit::handler(ctx, amount_change, increase)
+        instructions::order::cancel_list::handler(ctx)
     }
 }

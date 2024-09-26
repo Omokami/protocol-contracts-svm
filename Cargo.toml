@@ -10,7 +10,7 @@ anchor-lang = { version = "0.30.1", features = [
   "event-cpi"
 ] }
 anchor-spl = { version = "0.30.1", features = ["token_2022_extensions", "token_2022"] }
-wen_new_standard =  { git = "https://github.com/wen-community/wen-new-standard", features = ["cpi"] }
+wen_new_standard = { git = "https://github.com/wen-community/wen-new-standard", branch="no_kinobi", features = ["cpi"] }
 wen_royalty_distribution =  { git = "https://github.com/wen-community/wen-new-standard", features = ["cpi"] }
 mpl-token-metadata =  { version = "4.1.2", features = ["serde"] }
 mpl-bubblegum = { version = "1.4.0" }

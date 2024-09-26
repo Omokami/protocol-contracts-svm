@@ -143,7 +143,8 @@ pub fn get_is_nft(metadata: &Metadata) -> bool {
 
 #[derive(Clone)]
 pub struct PnftParams<'info> {
-    pub token_record: Option<AccountInfo<'info>>,
+    pub owner_token_record: Option<AccountInfo<'info>>,
+    pub destination_token_record: Option<AccountInfo<'info>>,
     pub authorization_rules: Option<AccountInfo<'info>>,
     pub authorization_data: Option<AuthorizationData>,
     pub authorization_rules_program: Option<AccountInfo<'info>>,

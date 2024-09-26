@@ -14,8 +14,6 @@ pub struct Order {
     pub market: Pubkey,
     /// owner of the order account
     pub owner: Pubkey,
-    /// bidding wallet of the owner
-    pub wallet: Pubkey,
     /// type of order - buy/sell
     pub side: u8,
     /// number of bids order is making
@@ -65,7 +63,6 @@ pub struct OrderEditEvent {
     pub nonce: String,
     pub market: String,
     pub owner: String,
-    pub wallet: String,
     pub side: u8,
     pub size: u64,
     pub price: u64,
@@ -105,7 +102,6 @@ impl Order {
         &mut self,
         market: Pubkey,
         owner: Pubkey,
-        wallet: Pubkey,
         nonce: Pubkey,
         nft_mint: Pubkey,
         time: i64,
@@ -119,7 +115,6 @@ impl Order {
         self.market = market;
         self.nonce = nonce;
         self.owner = owner;
-        self.wallet = wallet;
         self.nft_mint = nft_mint;
         self.side = side;
         self.size = size;
@@ -163,7 +158,6 @@ impl Order {
             nonce: self.nonce.to_string(),
             market: self.market.to_string(),
             owner: self.owner.to_string(),
-            wallet: self.wallet.to_string(),
             side: self.side,
             size: self.size,
             price: self.price,

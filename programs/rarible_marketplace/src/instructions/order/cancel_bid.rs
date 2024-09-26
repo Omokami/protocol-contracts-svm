@@ -5,7 +5,7 @@ use crate::state::*;
 #[derive(Accounts)]
 #[instruction()]
 #[event_cpi]
-pub struct CloseBuyOrder<'info> {
+pub struct CancelBid<'info> {
     #[account(mut)]
     pub initializer: Signer<'info>,
     #[account(
@@ -31,10 +31,11 @@ pub struct CloseBuyOrder<'info> {
 }
 
 #[inline(always)]
-pub fn handler(ctx: Context<CloseBuyOrder>) -> Result<()> {
+pub fn handler(ctx: Context<CancelBid>) -> Result<()> {
     msg!("Close buy order account: {}", ctx.accounts.order.key());
     ctx.accounts.order.state = OrderState::Closed.into();
 
+    // TODO Transfer funds out
     emit_cpi!(Order::get_edit_event(
         &mut ctx.accounts.order.clone(),
         ctx.accounts.order.key(),

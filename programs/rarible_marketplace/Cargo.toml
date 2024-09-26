@@ -26,3 +26,4 @@ spl-transfer-hook-interface.workspace = true
 mpl-token-metadata = { workspace = true }
 mpl-bubblegum = { workspace = true }
 num_enum = { workspace = true }
+wen_new_standard = { workspace = true }

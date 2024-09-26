@@ -8,4 +8,6 @@ pub enum MarketError {
     AmountOverflow,
     #[msg("Amount underflow")]
     AmountUnderflow,
+    #[msg("Unsupported NFT Type")]
+    UnsupportedNft,
 }

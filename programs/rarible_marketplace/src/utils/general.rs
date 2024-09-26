@@ -56,10 +56,20 @@ pub fn get_is_metaplex_nft(nft_account_info: &AccountInfo) -> bool {
 }
 
 fn get_pnft_params(ra: Vec<AccountInfo>) -> PnftParams {
+
+    let fourth_account = ra.get(3).cloned().unwrap();
+    let dest_token_record =
+    if *fourth_account.key == Pubkey::default() {
+        None
+    } else {
+        Some(fourth_account)
+    };
+    
     PnftParams {
-        token_record: ra.first().cloned(),
+        owner_token_record: ra.first().cloned(),
         authorization_rules: ra.get(1).cloned(),
         authorization_rules_program: ra.get(2).cloned(),
+        destination_token_record: dest_token_record,
         authorization_data: None,
     }
 }
@@ -116,7 +126,8 @@ fn parse_pnft_accounts(remaining_accounts: Vec<AccountInfo>) -> PnftParams {
             authorization_data: None,
             authorization_rules: None,
             authorization_rules_program: None,
-            token_record: None,
+            owner_token_record: None,
+            destination_token_record: None,
         }
     } else {
         get_pnft_params(remaining_accounts)
@@ -214,9 +225,9 @@ pub fn parse_remaining_accounts_pnft(
     extra_pnft_accounts: Option<usize>, //if there are extra pnfts tacked onto the end
 ) -> ParsedRemainingAccounts {
     let mut account_index = 0;
-    //first 3 are either default pubkeys or pnft accounts
+    //first 4 are either default pubkeys or pnft accounts
     let pnft_params = parse_pnft_accounts(remaining_accounts.clone());
-    account_index += 3;
+    account_index += 4;
     account_index += extra_pnft_accounts.unwrap_or(0);
     let delegate_record = if account_index < remaining_accounts.len() {
         parse_delegate_record(remaining_accounts[account_index..].to_vec())
