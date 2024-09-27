@@ -29,6 +29,8 @@ pub struct Order {
     pub last_edit_time: i64,
     /// nft mint in case order is a sell order
     pub nft_mint: Pubkey,
+    /// mint for the payment, default pubkey if SOL
+    pub payment_mint: Pubkey,
     /// fees on for this order
     pub fees_on: bool,
     /// reserved space for future changes split up due to serialization constraints
@@ -70,6 +72,7 @@ pub struct OrderEditEvent {
     pub init_time: i64,
     pub last_edit_time: i64,
     pub nft_mint: String,
+    pub payment_mint: String,
     pub market_identifier: String,
 }
 
@@ -104,6 +107,7 @@ impl Order {
         owner: Pubkey,
         nonce: Pubkey,
         nft_mint: Pubkey,
+        payment_mint: Pubkey,
         time: i64,
         side: u8,
         size: u64,
@@ -116,6 +120,7 @@ impl Order {
         self.nonce = nonce;
         self.owner = owner;
         self.nft_mint = nft_mint;
+        self.payment_mint = payment_mint;
         self.side = side;
         self.size = size;
         self.price = price;
@@ -128,16 +133,18 @@ impl Order {
     /// edit a buy order account
     /// if size is 0, order is closed
     /// any size change is considered partial
-    pub fn edit_buy(&mut self, new_price: u64, new_size: u64, time: i64) {
+    pub fn edit_buy(&mut self, new_price: u64, new_payment_mint: Pubkey, new_size: u64, time: i64) {
         self.size = new_size;
         self.price = new_price;
+        self.payment_mint = new_payment_mint;
         self.last_edit_time = time;
     }
 
     /// edit a sell order account
-    pub fn edit_sell(&mut self, new_price: u64, time: i64) {
+    pub fn edit_sell(&mut self, new_payment_mint: Pubkey, new_price: u64, time: i64) {
         self.price = new_price;
         self.last_edit_time = time;
+        self.payment_mint = new_payment_mint;
     }
 
     /// return true if the order is active
@@ -165,6 +172,7 @@ impl Order {
             init_time: self.init_time,
             last_edit_time: self.last_edit_time,
             nft_mint: self.nft_mint.to_string(),
+            payment_mint: self.payment_mint.to_string(),
             market_identifier: market_identifier.to_string(),
         }
     }

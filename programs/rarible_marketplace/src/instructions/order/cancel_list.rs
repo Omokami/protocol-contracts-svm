@@ -210,13 +210,15 @@ pub fn handler<'info>(ctx: Context<'_, '_, '_, 'info, CancelListing<'info>>) -> 
             // Remaining Accounts 0-2 for approval
             let approval_account = remaining_accounts.get(0).unwrap();
             let distribution_account = remaining_accounts.get(1).unwrap();
-            let distribution_program = remaining_accounts.get(2).unwrap();
-            let (_, extra_remaining_accounts) = remaining_accounts.split_at(2);
+            let distribution_token_account = remaining_accounts.get(2).unwrap();
+            let distribution_program = remaining_accounts.get(3).unwrap();
+            let (_, extra_remaining_accounts) = remaining_accounts.split_at(4);
             token22_ra = extra_remaining_accounts.to_vec();
 
             let wns_accounts = WnsApprovalAccounts {
                 approval_account: approval_account.to_account_info(),
                 distribution_account: distribution_account.to_account_info(),
+                distribution_token_account: distribution_token_account.to_account_info(),
                 distribution_program: distribution_program.to_account_info(),
             };
             ctx.accounts.approve_wns_transfer(wns_accounts)?;

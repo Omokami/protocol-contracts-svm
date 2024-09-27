@@ -14,6 +14,7 @@ use crate::{
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ListData {
     pub nonce: Pubkey,
+    pub payment_mint: Pubkey,
     pub price: u64,
 }
 
@@ -68,7 +69,6 @@ pub struct ListNft<'info> {
     #[account(address = sysvar::instructions::id())]
     pub sysvar_instructions: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
-    pub payment_token_program: Interface<'info, TokenInterface>,
     /// CHECK: checked by constraint and in cpi
     pub nft_token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -178,6 +178,7 @@ pub fn handler<'info>(
         ctx.accounts.initializer.key(),
         data.nonce,
         ctx.accounts.nft_mint.key(),
+        data.payment_mint,
         clock.unix_timestamp,
         OrderSide::Sell.into(),
         1, // always 1
@@ -238,13 +239,15 @@ pub fn handler<'info>(
             // Remaining Accounts 0-2 for approval
             let approval_account = remaining_accounts.get(0).unwrap();
             let distribution_account = remaining_accounts.get(1).unwrap();
-            let distribution_program = remaining_accounts.get(2).unwrap();
-            let (_, extra_remaining_accounts) = remaining_accounts.split_at(3);
+            let distribution_token_account = remaining_accounts.get(2).unwrap();
+            let distribution_program = remaining_accounts.get(3).unwrap();
+            let (_, extra_remaining_accounts) = remaining_accounts.split_at(4);
             token22_ra = extra_remaining_accounts.to_vec();
 
             let wns_accounts = WnsApprovalAccounts {
                 approval_account: approval_account.to_account_info(),
                 distribution_account: distribution_account.to_account_info(),
+                distribution_token_account: distribution_token_account.to_account_info(),
                 distribution_program: distribution_program.to_account_info(),
             };
             ctx.accounts.approve_wns_transfer(wns_accounts)?;

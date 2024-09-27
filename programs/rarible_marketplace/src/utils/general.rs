@@ -1,13 +1,10 @@
-use std::collections::HashMap;
-
 use anchor_lang::{
-    prelude::{AccountInfo, Pubkey, Result},
-    solana_program::{
+    prelude::{AccountInfo, Pubkey, Result}, require, solana_program::{
         program::{invoke, invoke_signed},
         system_instruction::transfer,
-    },
-    ToAccountInfo,
+    }, ToAccountInfo
 };
+use anchor_spl::associated_token::get_associated_token_address;
 use mpl_token_metadata::accounts::Metadata;
 use mpl_token_metadata::types::{
     AuthorizationData, TokenStandard,
@@ -64,7 +61,7 @@ fn get_pnft_params(ra: Vec<AccountInfo>) -> PnftParams {
     } else {
         Some(fourth_account)
     };
-    
+
     PnftParams {
         owner_token_record: ra.first().cloned(),
         authorization_rules: ra.get(1).cloned(),
@@ -115,7 +112,7 @@ pub struct ParsedRemainingAccounts<'info> {
     pub delegate_record: Option<AccountInfo<'info>>,
     // params for removing existing delegExtraDelegateParams
     pub existing_delegate_params: Option<ExistingDelegateParams<'info>>,
-    pub creator_accounts: Vec<AccountInfo<'info>>,
+    pub creator_token_accounts: Vec<AccountInfo<'info>>,
 }
 
 fn parse_pnft_accounts(remaining_accounts: Vec<AccountInfo>) -> PnftParams {
@@ -248,7 +245,7 @@ pub fn parse_remaining_accounts_pnft(
 
     account_index += 2;
 
-    let creator_accounts = if account_index < remaining_accounts.len() {
+    let creator_token_accounts = if account_index < remaining_accounts.len() {
         remaining_accounts[account_index..].to_vec()
     } else {
         Vec::new()
@@ -258,7 +255,7 @@ pub fn parse_remaining_accounts_pnft(
         existing_delegate_params,
         delegate_record,
         pnft_params,
-        creator_accounts,
+        creator_token_accounts,
     }
 }
 
@@ -269,7 +266,7 @@ pub fn get_fee_amount(order_price: u64) -> u64 {
         .unwrap()
 }
 
-pub fn get_index_fee_bp(amount: u64, bp: u128) -> Result<[u64; 2]> {
+pub fn get_amount_from_bp(amount: u64, bp: u128) -> Result<u64> {
     let pct_value_u128 = u128::from(amount)
         .checked_mul(bp)
         .ok_or(MarketError::AmountOverflow)?
@@ -277,59 +274,26 @@ pub fn get_index_fee_bp(amount: u64, bp: u128) -> Result<[u64; 2]> {
         .ok_or(MarketError::AmountOverflow)?;
     let pct_value = u64::try_from(pct_value_u128).unwrap_or(0);
 
-    let pct_remaining = amount
-        .checked_sub(pct_value)
-        .ok_or(MarketError::AmountOverflow)?;
-
-    Ok([pct_remaining, pct_value])
+    Ok(pct_value)
 }
 
-pub fn pay_royalties<'info>(
-    price: u64,
-    metadata_account: AccountInfo<'info>,
-    payer: AccountInfo<'info>,
-    system_program: AccountInfo<'info>,
-    creator_accounts: Vec<AccountInfo<'info>>,
-    use_lamports_transfer: bool,
-    signer_seeds: Option<&[&[&[u8]]; 1]>,
+pub fn validate_associated_token_account(
+    token_account: &AccountInfo,
+    owner: &Pubkey,
+    mint: &Pubkey,
+    token_program: &Pubkey,
 ) -> Result<()> {
-    let metadata = Metadata::safe_deserialize(&metadata_account.data.borrow())?;
-    let creator_accounts_map: HashMap<Pubkey, AccountInfo<'info>> = creator_accounts
-        .into_iter()
-        .map(|creator_account| (*creator_account.key, creator_account))
-        .collect();
-    let [_, royalties] = get_index_fee_bp(price, metadata.seller_fee_basis_points.into())?;
-    if let Some(creators) = metadata.creators.clone() {
-        for creator in creators {
-            if creator.share != 0 {
-                let amount = royalties
-                    .checked_mul(creator.share.into())
-                    .unwrap()
-                    .checked_div(100)
-                    .unwrap();
-                if use_lamports_transfer {
-                    lamport_transfer(
-                        payer.clone(),
-                        creator_accounts_map
-                            .get(&creator.address)
-                            .unwrap()
-                            .to_account_info(),
-                        amount,
-                    )?;
-                } else {
-                    transfer_sol(
-                        payer.clone(),
-                        creator_accounts_map
-                            .get(&creator.address)
-                            .unwrap()
-                            .to_account_info(),
-                        system_program.clone(),
-                        signer_seeds,
-                        amount,
-                    )?;
-                }
-            }
-        }
-    }
+    let expected_ata = get_associated_token_address(owner, mint);
+    
+    require!(
+        token_account.key == &expected_ata,
+        MarketError::WrongAccount
+    );
+
+    require!(
+        token_account.owner == token_program,
+        MarketError::WrongAccount
+    );
+
     Ok(())
 }

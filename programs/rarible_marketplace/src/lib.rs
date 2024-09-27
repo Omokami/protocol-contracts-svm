@@ -42,12 +42,6 @@ pub mod listings {
         instructions::order::list::handler(ctx, data)
     }
 
-    /// edit a bid
-    #[inline(always)]
-    pub fn edit_order(ctx: Context<EditOrder>, data: EditOrderData) -> Result<()> {
-        instructions::order::edit::handler(ctx, data)
-    }
-
     /// fill a listing
     #[inline(always)]
     pub fn fill_order<'info>(
