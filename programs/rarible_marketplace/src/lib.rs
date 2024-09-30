@@ -11,7 +11,7 @@ use instructions::*;
 declare_id!("rAREXWkxUP9Cr91tRVJ29NumDAEKvNpDWZNqcfSwBNG");
 
 #[program]
-pub mod listings {
+pub mod marketplace {
 
     use super::*;
 

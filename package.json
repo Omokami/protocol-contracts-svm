@@ -32,6 +32,7 @@
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.3.0",
     "@types/mocha": "^9.0.0",
+    "@types/node": "^20.14.2",
     "anchor-bankrun": "^0.3.0",
     "chai": "^4.3.4",
     "conventional-changelog-cli": "^5.0.0",

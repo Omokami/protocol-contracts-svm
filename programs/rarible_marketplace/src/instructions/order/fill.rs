@@ -25,10 +25,15 @@ pub struct FillOrder<'info> {
     #[account(mut)]
     /// CHECK: constraint check
     pub maker: UncheckedAccount<'info>,
+    #[account(mut)]
     /// CHECK: constraint check
-    pub buyer: UncheckedAccount<'info>,
+    pub nft_recipient: UncheckedAccount<'info>,
     /// CHECK: constraint check
-    pub seller: UncheckedAccount<'info>,
+    pub nft_funder: UncheckedAccount<'info>,
+    /// CHECK: constraint check
+    pub payment_recipient: UncheckedAccount<'info>,
+    /// CHECK: constraint check
+    pub payment_funder: UncheckedAccount<'info>,
     #[account(
         constraint = Market::is_active(market.state),
         seeds = [MARKET_SEED,
@@ -52,8 +57,14 @@ pub struct FillOrder<'info> {
     #[account(mut)]
     pub nft_mint: Box<InterfaceAccount<'info, Mint>>,
     #[account(
+        seeds = [VERIFICATION_SEED, market.market_identifier.as_ref(), nft_mint.key().as_ref()],
+        bump,
+        constraint = verification.verified == 1
+    )]
+    pub verification: Box<Account<'info, MintVerification>>,
+    #[account(
         associated_token::mint = nft_mint,
-        associated_token::authority = seller,
+        associated_token::authority = nft_funder,
         associated_token::token_program = nft_token_program,
     )]
     pub seller_nft_ta: Box<InterfaceAccount<'info, TokenAccount>>,
@@ -61,7 +72,7 @@ pub struct FillOrder<'info> {
         init_if_needed,
         payer = taker,
         associated_token::mint = nft_mint,
-        associated_token::authority = buyer,
+        associated_token::authority = nft_recipient,
         associated_token::token_program = nft_token_program,
     )]
     pub buyer_nft_ta: Box<InterfaceAccount<'info, TokenAccount>>,
@@ -70,16 +81,16 @@ pub struct FillOrder<'info> {
     /// CHECK: checked by constraint and in cpi
     pub nft_program: UncheckedAccount<'info>,
     #[account(
+        init_if_needed,
+        payer = taker,
         associated_token::mint = payment_mint,
-        associated_token::authority = seller,
+        associated_token::authority = payment_recipient,
         associated_token::token_program = payment_token_program,
     )]
     pub seller_payment_ta: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(
-        init_if_needed,
-        payer = taker,
         associated_token::mint = payment_mint,
-        associated_token::authority = buyer,
+        associated_token::authority = payment_funder,
         associated_token::token_program = payment_token_program,
     )]
     pub buyer_payment_ta: Box<InterfaceAccount<'info, TokenAccount>>,
@@ -90,8 +101,6 @@ pub struct FillOrder<'info> {
     #[account(address = sysvar::instructions::id())]
     pub sysvar_instructions: UncheckedAccount<'info>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-    /// CHECK: checked by constraint and in cpi
-    pub token_metadata_program: UncheckedAccount<'info>,
 }
 
 impl<'info> FillOrder<'info> {
@@ -158,7 +167,7 @@ impl<'info> FillOrder<'info> {
                 payer: self.taker.to_account_info(),
                 source_owner: self.taker.to_account_info(),
                 source_ta: self.seller_nft_ta.to_account_info(),
-                destination_owner: self.maker.to_account_info(),
+                destination_owner: self.nft_recipient.to_account_info(),
                 destination_ta: self.buyer_nft_ta.to_account_info(),
                 mint: self.nft_mint.to_account_info(),
                 metadata: extra_transfer_accounts.metadata.to_account_info(),
@@ -300,11 +309,15 @@ pub fn handler<'info>(ctx: Context<'_, '_, '_, 'info, FillOrder<'info>>) -> Resu
     // Verify maker + taker accounts
     // Verify the buyer account
     if is_buy {
-        require!(ctx.accounts.buyer.key() == ctx.accounts.maker.key(), MarketError::WrongAccount);
-        require!(ctx.accounts.seller.key() == ctx.accounts.taker.key(), MarketError::WrongAccount);
+        require!(ctx.accounts.nft_funder.key() == ctx.accounts.taker.key(), MarketError::WrongAccount);
+        require!(ctx.accounts.nft_recipient.key() == ctx.accounts.maker.key(), MarketError::WrongAccount);
+        require!(ctx.accounts.payment_funder.key() == ctx.accounts.order.key(), MarketError::WrongAccount);
+        require!(ctx.accounts.payment_recipient.key() == ctx.accounts.taker.key(), MarketError::WrongAccount);
     } else {
-        require!(ctx.accounts.buyer.key() == ctx.accounts.taker.key(), MarketError::WrongAccount);
-        require!(ctx.accounts.seller.key() == ctx.accounts.order.key(), MarketError::WrongAccount);
+        require!(ctx.accounts.nft_funder.key() == ctx.accounts.order.key(), MarketError::WrongAccount);
+        require!(ctx.accounts.nft_recipient.key() == ctx.accounts.taker.key(), MarketError::WrongAccount);
+        require!(ctx.accounts.payment_funder.key() == ctx.accounts.taker.key(), MarketError::WrongAccount);
+        require!(ctx.accounts.payment_recipient.key() == ctx.accounts.maker.key(), MarketError::WrongAccount);
     }
 
     // Transfer NFT

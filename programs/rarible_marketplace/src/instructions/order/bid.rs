@@ -6,7 +6,6 @@ use crate::state::*;
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct BidData {
     pub nonce: Pubkey,
-    pub payment_mint: Pubkey,
     pub price: u64,
     pub size: u64,
 }
@@ -50,7 +49,7 @@ pub struct BidNft<'info> {
         associated_token::token_program = payment_token_program,
     )]
     pub order_payment_ta: Box<InterfaceAccount<'info, TokenAccount>>,
-    #[account(mut, constraint = payment_mint.key() == data.payment_mint)]
+    #[account(mut)]
     pub payment_mint: Box<InterfaceAccount<'info, Mint>>,
     pub payment_token_program: Interface<'info, TokenInterface>,
     /// CHECK: can be anything
@@ -90,7 +89,7 @@ pub fn handler(ctx: Context<BidNft>, data: BidData) -> Result<()> {
         ctx.accounts.initializer.key(),
         data.nonce,
         ctx.accounts.nft_mint.key(),
-        data.payment_mint,
+        ctx.accounts.payment_mint.key(),
         clock.unix_timestamp,
         OrderSide::Buy.into(),
         data.size,
