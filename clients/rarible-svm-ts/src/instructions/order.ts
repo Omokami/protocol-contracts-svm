@@ -162,8 +162,8 @@ export const fillOrder = async (provider: Provider, orderAddress: string, nftMin
 
 	const buyerPaymentTa = getAtaAddress(order.paymentMint.toString(), paymentFunder, paymentTokenProgram.toString());
 	const sellerPaymentTa = getAtaAddress(order.paymentMint.toString(), paymentRecipient, paymentTokenProgram.toString());
-	const buyerNftTa = getAtaAddress(nftMint, nftFunder, paymentTokenProgram.toString());
-	const sellerNftTa = getAtaAddress(nftMint, nftRecipient, paymentTokenProgram.toString());
+	const buyerNftTa = getAtaAddress(nftMint, nftRecipient, nftTokenProgram.toString());
+	const sellerNftTa = getAtaAddress(nftMint, nftFunder, nftTokenProgram.toString());
 
 	const verification = getVerificationPda(order.market.toString(), nftMint);
 	const eventAuthority = getEventAuthority();
@@ -177,10 +177,6 @@ export const fillOrder = async (provider: Provider, orderAddress: string, nftMin
 			maker: order.owner,
 			market: order.market,
 			order: orderAddress,
-			paymentFunder,
-			paymentRecipient,
-			nftFunder,
-			nftRecipient,
 			buyerNftTa,
 			buyerPaymentTa,
 			sellerNftTa,
@@ -204,7 +200,7 @@ export const fillOrder = async (provider: Provider, orderAddress: string, nftMin
 };
 
 // Cancel Listing
-export const cancelListing = async (provider: Provider, orderAddress: PublicKey) => {
+export const getCancelListing = async (provider: Provider, orderAddress: PublicKey, extraAccountParams: WnsAccountParams | undefined) => {
 	const marketProgram = getMarketplaceProgram(provider);
 	const initializer = provider.publicKey?.toString();
 	if (!initializer) {
@@ -229,6 +225,7 @@ export const cancelListing = async (provider: Provider, orderAddress: PublicKey)
 	const nftProgram = await getNftProgramFromMint(provider, nftMint.toString());
 
 	const eventAuthority = getEventAuthority();
+	const remainingAccounts: AccountMeta[] = await getRemainingAccountsForMint(provider, nftMint.toString(), extraAccountParams);
 
 	const ix = await marketProgram.methods
 		.cancelListing()
@@ -247,13 +244,14 @@ export const cancelListing = async (provider: Provider, orderAddress: PublicKey)
 			program: marketplaceProgramId,
 			eventAuthority,
 		})
+		.remainingAccounts(remainingAccounts)
 		.instruction();
 
 	return ix;
 };
 
 // Cancel Bid
-export const cancelBid = async (provider: Provider, orderAddress: PublicKey) => {
+export const getCancelBid = async (provider: Provider, orderAddress: PublicKey) => {
 	const marketProgram = getMarketplaceProgram(provider);
 	const initializer = provider.publicKey?.toString();
 	if (!initializer) {

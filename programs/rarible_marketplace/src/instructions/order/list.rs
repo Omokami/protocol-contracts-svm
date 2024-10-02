@@ -44,7 +44,7 @@ pub struct ListNft<'info> {
     )]
     pub order: Box<Account<'info, Order>>,
     #[account(
-        seeds = [VERIFICATION_SEED, market.market_identifier.as_ref(), nft_mint.key().as_ref()],
+        seeds = [VERIFICATION_SEED, nft_mint.key().as_ref(), market.key().as_ref()],
         bump,
         constraint = verification.verified == 1
     )]
@@ -55,14 +55,17 @@ pub struct ListNft<'info> {
     pub nft_mint: Box<InterfaceAccount<'info, Mint>>,
     #[account(
         mut,
-        constraint = initializer_nft_ta.owner == initializer.key(),
-        constraint = initializer_nft_ta.mint == nft_mint.key(),
+        associated_token::mint = nft_mint,
+        associated_token::authority = initializer,
+        associated_token::token_program = nft_token_program
     )]
     pub initializer_nft_ta: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(
-        mut,
-        constraint = order_nft_ta.owner == order.key(),
-        constraint = order_nft_ta.mint == nft_mint.key(),
+        init_if_needed,
+        payer = initializer,
+        associated_token::mint = nft_mint,
+        associated_token::authority = order,
+        associated_token::token_program = nft_token_program
     )]
     pub order_nft_ta: Box<InterfaceAccount<'info, TokenAccount>>,
     /// CHECK: checked by constraint and in cpi
@@ -126,7 +129,7 @@ impl<'info> ListNft<'info> {
             authority: self.initializer.to_account_info(),
             mint: self.nft_mint.to_account_info(),
             approve_account: wns_accounts.approval_account.to_account_info(),
-            payment_mint: self.system_program.to_account_info(), //  wont be used
+            payment_mint: wns_accounts.payment_mint.to_account_info(),
             distribution_token_account: None, // wont be used
             authority_token_account: None, // wont be used
             distribution_account: wns_accounts.distribution_account.to_account_info(),
@@ -236,12 +239,13 @@ pub fn handler<'info>(
         let mut token22_ra = remaining_accounts.clone();
         // Check if its WNS
         if *nft_program_key == WNS_PID {
-            // Remaining Accounts 0-2 for approval
+            // Remaining Accounts 0-4 for approval
             let approval_account = remaining_accounts.get(0).unwrap();
             let distribution_account = remaining_accounts.get(1).unwrap();
             let distribution_token_account = remaining_accounts.get(2).unwrap();
             let distribution_program = remaining_accounts.get(3).unwrap();
-            let (_, extra_remaining_accounts) = remaining_accounts.split_at(4);
+            let payment_mint = remaining_accounts.get(4).unwrap();
+            let (_, extra_remaining_accounts) = remaining_accounts.split_at(5);
             token22_ra = extra_remaining_accounts.to_vec();
 
             let wns_accounts = WnsApprovalAccounts {
@@ -249,6 +253,7 @@ pub fn handler<'info>(
                 distribution_account: distribution_account.to_account_info(),
                 distribution_token_account: distribution_token_account.to_account_info(),
                 distribution_program: distribution_program.to_account_info(),
+                payment_mint: payment_mint.to_account_info(),
             };
             ctx.accounts.approve_wns_transfer(wns_accounts)?;
         }

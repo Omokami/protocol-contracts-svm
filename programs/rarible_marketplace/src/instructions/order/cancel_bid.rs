@@ -13,7 +13,6 @@ pub struct CancelBid<'info> {
         mut,
         constraint = order.owner == initializer.key(),
         constraint = Order::is_active(order.state),
-        // constraint = order.side == OrderSide::Buy.into() || order.side == OrderSide::CompressedBuy.into(),
         seeds = [ORDER_SEED,
         order.nonce.as_ref(),
         order.market.as_ref(),
@@ -30,6 +29,7 @@ pub struct CancelBid<'info> {
     )]
     pub market: Box<Account<'info, Market>>,
     #[account(
+        mut,
         associated_token::mint = payment_mint,
         associated_token::authority = initializer,
         associated_token::token_program = payment_token_program,
@@ -52,6 +52,7 @@ pub struct CancelBid<'info> {
 
 impl<'info> CancelBid<'info> {
     fn transfer_payment(&self, signer_seeds: &[&[&[u8]]], amount: u64) -> Result<()> {
+        msg!("{:?} -- {:?}", amount,  self.order_payment_ta.key().to_string());
         let cpi_ctx = CpiContext::new_with_signer(
             self.payment_token_program.to_account_info(),
             TransferChecked {
@@ -74,7 +75,7 @@ pub fn handler(ctx: Context<CancelBid>) -> Result<()> {
 
     let signer_seeds: &[&[&[u8]]; 1] = &[&[ORDER_SEED, ctx.accounts.order.nonce.as_ref(), ctx.accounts.order.market.as_ref(), ctx.accounts.order.owner.as_ref(), bump][..]];
 
-    let bid_value = ctx.accounts.order.size.checked_mul( ctx.accounts.order.price).unwrap();
+    let bid_value = ctx.accounts.order.size.checked_mul(ctx.accounts.order.price).unwrap();
     // TODO Transfer funds out
     ctx.accounts.transfer_payment(signer_seeds, bid_value)?;
     emit_cpi!(Order::get_edit_event(

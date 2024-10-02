@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/marketplace.json`.
  */
 export type Marketplace = {
-  "address": "rAREXWkxUP9Cr91tRVJ29NumDAEKvNpDWZNqcfSwBNG",
+  "address": "B6ckscvApoZpBZ7cKGYa4VK4vTc1x9XjPk6osKfK7rSZ",
   "metadata": {
     "name": "marketplace",
     "version": "0.1.0",
@@ -89,6 +89,7 @@ export type Marketplace = {
         },
         {
           "name": "initializerPaymentTa",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -340,6 +341,7 @@ export type Marketplace = {
         },
         {
           "name": "initializerPaymentTa",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -668,19 +670,6 @@ export type Marketplace = {
           "writable": true
         },
         {
-          "name": "nftRecipient",
-          "writable": true
-        },
-        {
-          "name": "nftFunder"
-        },
-        {
-          "name": "paymentRecipient"
-        },
-        {
-          "name": "paymentFunder"
-        },
-        {
           "name": "market",
           "pda": {
             "seeds": [
@@ -763,128 +752,22 @@ export type Marketplace = {
               },
               {
                 "kind": "account",
-                "path": "market.market_identifier",
-                "account": "market"
+                "path": "nftMint"
               },
               {
                 "kind": "account",
-                "path": "nftMint"
+                "path": "market"
               }
             ]
           }
         },
         {
           "name": "sellerNftTa",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "nftFunder"
-              },
-              {
-                "kind": "account",
-                "path": "nftTokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "nftMint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
+          "writable": true
         },
         {
           "name": "buyerNftTa",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "nftRecipient"
-              },
-              {
-                "kind": "account",
-                "path": "nftTokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "nftMint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
+          "writable": true
         },
         {
           "name": "systemProgram",
@@ -898,116 +781,11 @@ export type Marketplace = {
         },
         {
           "name": "sellerPaymentTa",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "paymentRecipient"
-              },
-              {
-                "kind": "account",
-                "path": "paymentTokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "paymentMint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
+          "writable": true
         },
         {
           "name": "buyerPaymentTa",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "paymentFunder"
-              },
-              {
-                "kind": "account",
-                "path": "paymentTokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "paymentMint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
+          "writable": true
         },
         {
           "name": "paymentMint",
@@ -1242,12 +1020,11 @@ export type Marketplace = {
               },
               {
                 "kind": "account",
-                "path": "market.market_identifier",
-                "account": "market"
+                "path": "nftMint"
               },
               {
                 "kind": "account",
-                "path": "nftMint"
+                "path": "market"
               }
             ]
           }
@@ -1257,11 +1034,117 @@ export type Marketplace = {
         },
         {
           "name": "initializerNftTa",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "initializer"
+              },
+              {
+                "kind": "account",
+                "path": "nftTokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "nftMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
         },
         {
           "name": "orderNftTa",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "order"
+              },
+              {
+                "kind": "account",
+                "path": "nftTokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "nftMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
         },
         {
           "name": "sysvarInstructions",
@@ -1376,12 +1259,11 @@ export type Marketplace = {
               },
               {
                 "kind": "account",
-                "path": "market.market_identifier",
-                "account": "market"
+                "path": "nftMint"
               },
               {
                 "kind": "account",
-                "path": "nftMint"
+                "path": "market"
               }
             ]
           }

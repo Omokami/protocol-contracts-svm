@@ -36,6 +36,7 @@ pub struct BidNft<'info> {
     )]
     pub order: Box<Account<'info, Order>>,
     #[account(
+        mut,
         associated_token::mint = payment_mint,
         associated_token::authority = initializer,
         associated_token::token_program = payment_token_program,

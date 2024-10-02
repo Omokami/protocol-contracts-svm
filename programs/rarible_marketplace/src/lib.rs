@@ -8,7 +8,7 @@ pub mod utils;
 use instructions::*;
 
 // rAREXWkxUP9Cr91tRVJ29NumDAEKvNpDWZNqcfSwBNG - program id
-declare_id!("rAREXWkxUP9Cr91tRVJ29NumDAEKvNpDWZNqcfSwBNG");
+declare_id!("B6ckscvApoZpBZ7cKGYa4VK4vTc1x9XjPk6osKfK7rSZ");
 
 #[program]
 pub mod marketplace {
@@ -16,25 +16,25 @@ pub mod marketplace {
     use super::*;
 
     /// initializer a new market
-    #[inline(always)]
+    #[inline(never)]
     pub fn init_market(ctx: Context<InitMarket>) -> Result<()> {
         instructions::market::init::handler(ctx)
     }
 
     /// initializer a new market
-    #[inline(always)]
+    #[inline(never)]
     pub fn verify_mint(ctx: Context<VerifyMint>) -> Result<()> {
         instructions::market::verify_mint::handler(ctx)
     }
 
     /// initializer a new bid
-    #[inline(always)]
+    #[inline(never)]
     pub fn bid(ctx: Context<BidNft>, data: BidData) -> Result<()> {
         instructions::order::bid::handler(ctx, data)
     }
 
     /// initializer a new listing
-    #[inline(always)]
+    #[inline(never)]
     pub fn list<'info>(
         ctx: Context<'_, '_, '_, 'info, ListNft<'info>>,
         data: ListData,
@@ -43,7 +43,7 @@ pub mod marketplace {
     }
 
     /// fill a listing
-    #[inline(always)]
+    #[inline(never)]
     pub fn fill_order<'info>(
         ctx: Context<'_, '_, '_, 'info, FillOrder<'info>>,
     ) -> Result<()> {
@@ -51,13 +51,13 @@ pub mod marketplace {
     }
 
     /// cancel a buy order
-    #[inline(always)]
+    #[inline(never)]
     pub fn cancel_bid(ctx: Context<CancelBid>) -> Result<()> {
         instructions::order::cancel_bid::handler(ctx)
     }
 
     /// cancel a sell order
-    #[inline(always)]
+    #[inline(never)]
     pub fn cancel_listing<'info>(
         ctx: Context<'_, '_, '_, 'info, CancelListing<'info>>,
     ) -> Result<()> {

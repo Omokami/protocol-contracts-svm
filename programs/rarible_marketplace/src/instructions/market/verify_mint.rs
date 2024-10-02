@@ -18,8 +18,8 @@ pub struct VerifyMint<'info> {
         init_if_needed,
         seeds = [
             VERIFICATION_SEED,
-            market.market_identifier.key().as_ref(),
-            nft_mint.key().as_ref()
+            nft_mint.key().as_ref(),
+            market.key().as_ref()
         ],
         payer = initializer,
         space = 8 + std::mem::size_of::<MintVerification>(),

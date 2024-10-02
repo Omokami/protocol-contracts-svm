@@ -3,7 +3,7 @@ import {
 } from '@solana/web3.js';
 import {type Provider} from '@coral-xyz/anchor';
 import {
-	getEventAuthority, getMarketAccount, getMarketplaceProgram,
+	getEventAuthority, getMarketPda, getMarketplaceProgram,
 	getVerificationPda,
 	marketplaceProgramId,
 } from '../utils';
@@ -11,7 +11,7 @@ import {
 // Initialize Market
 export const getInitializeMarket = async (provider: Provider, marketIdentifier: string) => {
 	const marketProgram = getMarketplaceProgram(provider);
-	const market = getMarketAccount(marketIdentifier);
+	const market = getMarketPda(marketIdentifier);
 	const eventAuthority = getEventAuthority();
 
 	const ix = await marketProgram.methods

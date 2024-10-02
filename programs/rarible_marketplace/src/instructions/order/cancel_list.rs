@@ -109,12 +109,12 @@ impl<'info> CancelListing<'info> {
     // WNS Pre-Transfer Approval
     fn approve_wns_transfer(&self, wns_accounts: WnsApprovalAccounts<'info>) -> Result<()> {
         let cpi_program = self.nft_program.to_account_info();
-        let cpi_accounts: ApproveTransfer<'_> = ApproveTransfer {
+        let cpi_accounts = ApproveTransfer {
             payer: self.initializer.to_account_info(),
             authority: self.initializer.to_account_info(),
             mint: self.nft_mint.to_account_info(),
             approve_account: wns_accounts.approval_account.to_account_info(),
-            payment_mint: self.system_program.to_account_info(), //  wont be used
+            payment_mint: wns_accounts.payment_mint.to_account_info(),
             distribution_token_account: None, // wont be used
             authority_token_account: None, // wont be used
             distribution_account: wns_accounts.distribution_account.to_account_info(),
@@ -207,12 +207,13 @@ pub fn handler<'info>(ctx: Context<'_, '_, '_, 'info, CancelListing<'info>>) -> 
         let mut token22_ra = remaining_accounts.clone();
         // Check if its WNS
         if *nft_program_key == WNS_PID {
-            // Remaining Accounts 0-2 for approval
+            // Remaining Accounts 0-4 for approval
             let approval_account = remaining_accounts.get(0).unwrap();
             let distribution_account = remaining_accounts.get(1).unwrap();
             let distribution_token_account = remaining_accounts.get(2).unwrap();
             let distribution_program = remaining_accounts.get(3).unwrap();
-            let (_, extra_remaining_accounts) = remaining_accounts.split_at(4);
+            let payment_mint = remaining_accounts.get(4).unwrap();
+            let (_, extra_remaining_accounts) = remaining_accounts.split_at(5);
             token22_ra = extra_remaining_accounts.to_vec();
 
             let wns_accounts = WnsApprovalAccounts {
@@ -220,6 +221,7 @@ pub fn handler<'info>(ctx: Context<'_, '_, '_, 'info, CancelListing<'info>>) -> 
                 distribution_account: distribution_account.to_account_info(),
                 distribution_token_account: distribution_token_account.to_account_info(),
                 distribution_program: distribution_program.to_account_info(),
+                payment_mint: payment_mint.to_account_info(),
             };
             ctx.accounts.approve_wns_transfer(wns_accounts)?;
         }

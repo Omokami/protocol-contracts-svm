@@ -14,18 +14,31 @@ pub struct MetaplexAdditionalTransferAccounts<'info> {
 
 #[derive(Accounts)]
 pub struct TransferMetaplexNft<'info> {
+    /// CHECK: authority is owner
     pub authority: AccountInfo<'info>,
+    /// CHECK: payer is owner
     pub payer: AccountInfo<'info>,
+    /// CHECK: checked in CPI
     pub source_owner: AccountInfo<'info>,
+    /// CHECK: checked in CPI
     pub source_ta: AccountInfo<'info>,
+    /// CHECK: checked in CPI
     pub destination_owner: AccountInfo<'info>,
+    /// CHECK: checked in CPI
     pub destination_ta: AccountInfo<'info>,
+    /// CHECK: checked in CPI
     pub mint: AccountInfo<'info>,
+    /// CHECK: checked in CPI
     pub metadata: AccountInfo<'info>,
+    /// CHECK: checked in CPI
     pub edition: AccountInfo<'info>,
+    /// CHECK: checked in CPI
     pub system_program: AccountInfo<'info>,
+    /// CHECK: checked in CPI
     pub instructions: AccountInfo<'info>,
+    /// CHECK: checked in CPI
     pub token_program: AccountInfo<'info>,
+    /// CHECK: checked in CPI
     pub ata_program: AccountInfo<'info>,
 }
 

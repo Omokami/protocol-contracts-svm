@@ -3,7 +3,7 @@ import {
 	utils,
 } from '@coral-xyz/anchor';
 import {
-	type AccountMeta, Connection, PublicKey, type TransactionInstruction,
+	type AccountMeta, ComputeBudgetProgram, Connection, PublicKey, type TransactionInstruction,
 } from '@solana/web3.js';
 import {
 	marketplaceProgramId,
@@ -22,6 +22,26 @@ export const getProvider = () => {
 	const anchorProvider = AnchorProvider.local();
 	const provider = new AnchorProvider(connection, anchorProvider.wallet, {...AnchorProvider.defaultOptions(), commitment: 'processed'});
 	return provider;
+};
+
+export type ComputeBudgetParams = {
+	priorityFee?: number;
+	computeUnits?: number;
+};
+
+export const getComputeBudgetInstructions = (computeParams: ComputeBudgetParams) => {
+	const ixs: TransactionInstruction[] = [];
+	if (computeParams.computeUnits !== undefined) {
+		const computeIx = ComputeBudgetProgram.setComputeUnitLimit({units: computeParams.computeUnits});
+		ixs.push(computeIx);
+	}
+
+	if (computeParams.priorityFee !== undefined) {
+		const priceIx = ComputeBudgetProgram.setComputeUnitPrice({microLamports: computeParams.priorityFee});
+		ixs.push(priceIx);
+	}
+
+	return ixs;
 };
 
 export const getTokenProgramFromMint = async (provider: Provider, mint: string) => {
@@ -113,6 +133,9 @@ export const getRemainingAccountsForMint = async (provider: Provider, mint: stri
 		const approveAccount = getApproveAccountPda(mint);
 		const distributionAccount = getDistributionAccountPda(wnsParams.groupMint, wnsParams.paymentMint);
 
+		const paymentTokenProgram = await getTokenProgramFromMint(provider, wnsParams.paymentMint);
+		const distributionTokenAccount = paymentTokenProgram && getAtaAddress(wnsParams.paymentMint, distributionAccount.toString(), paymentTokenProgram.toString());
+
 		remainingAccounts.push(...[
 			{
 				pubkey: approveAccount,
@@ -125,12 +148,17 @@ export const getRemainingAccountsForMint = async (provider: Provider, mint: stri
 				isSigner: false,
 			},
 			{
-				pubkey: PublicKey.default,
-				isWritable: false,
+				pubkey: distributionTokenAccount ?? distributionAccount,
+				isWritable: true,
 				isSigner: false,
 			},
 			{
 				pubkey: wnsDistributionProgramId,
+				isWritable: false,
+				isSigner: false,
+			},
+			{
+				pubkey: new PublicKey(wnsParams.paymentMint),
 				isWritable: false,
 				isSigner: false,
 			},

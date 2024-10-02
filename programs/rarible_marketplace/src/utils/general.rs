@@ -4,7 +4,7 @@ use anchor_lang::{
         system_instruction::transfer,
     }, ToAccountInfo
 };
-use anchor_spl::associated_token::get_associated_token_address;
+use anchor_spl::associated_token::{get_associated_token_address, spl_associated_token_account};
 use mpl_token_metadata::accounts::Metadata;
 use mpl_token_metadata::types::{
     AuthorizationData, TokenStandard,
@@ -13,6 +13,7 @@ use mpl_token_metadata::types::{
 use crate::{errors::MarketError, state::PROTOCOL_FEES_BPS};
 
 use super::metaplex::pnft::utils::{ExistingDelegateParams, PnftParams};
+use spl_associated_token_account::instruction::create_associated_token_account;
 
 pub fn get_bump_in_seed_form(bump: &u8) -> [u8; 1] {
     let bump_val = *bump;
@@ -294,6 +295,48 @@ pub fn validate_associated_token_account(
         token_account.owner == token_program,
         MarketError::WrongAccount
     );
+
+    Ok(())
+}
+
+
+#[inline(never)]
+pub fn create_ata<'info>(
+    ata: &AccountInfo<'info>,
+    payer: &AccountInfo<'info>,
+    mint: &AccountInfo<'info>,
+    owner: &AccountInfo<'info>,
+    system_program: &AccountInfo<'info>,
+    token_program: &AccountInfo<'info>,
+) -> Result<()> {
+    if *ata.key
+        != spl_associated_token_account::get_associated_token_address_with_program_id(owner.key, mint.key, token_program.key)
+    {
+        return Err(MarketError::WrongAccount.into());
+    }
+
+    if !ata.to_account_info().data_is_empty() {
+        return Ok(());
+    }
+
+    let ix = create_associated_token_account(
+        payer.key,
+        owner.key,
+        mint.key,
+        token_program.key,
+    );
+
+    invoke(
+        &ix,
+        &vec![
+            payer.to_account_info(),
+            ata.to_account_info(),
+            owner.to_account_info(),
+            mint.to_account_info(),
+            system_program.to_account_info(),
+            token_program.to_account_info(),
+        ],
+    )?;
 
     Ok(())
 }
