@@ -10,7 +10,7 @@ use mpl_token_metadata::types::{
     AuthorizationData, TokenStandard,
 };
 
-use crate::{errors::MarketError, state::PROTOCOL_FEES_BPS};
+use crate::errors::MarketError;
 
 use super::metaplex::pnft::utils::{ExistingDelegateParams, PnftParams};
 use spl_associated_token_account::instruction::create_associated_token_account;
@@ -260,8 +260,8 @@ pub fn parse_remaining_accounts_pnft(
     }
 }
 
-pub fn get_fee_amount(order_price: u64) -> u64 {
-    (order_price.checked_mul(PROTOCOL_FEES_BPS))
+pub fn get_fee_amount(order_price: u64, market_fee_bps: u64) -> u64 {
+    (order_price.checked_mul(market_fee_bps))
         .unwrap()
         .checked_div(10000)
         .unwrap()

@@ -59,6 +59,12 @@ pub struct FillOrder<'info> {
     #[account(mut)]
     /// CHECK: checked by create_ata function
     pub buyer_nft_ta: UncheckedAccount<'info>,
+    #[account(mut, constraint = fee_recipient.key() == market.fee_recipient.key())]
+    /// CHECK: constraint check
+    pub fee_recipient: UncheckedAccount<'info>,
+    #[account(mut)]
+    /// CHECK: checked by create_ata function
+    pub fee_recipient_ta: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
     pub nft_token_program: Interface<'info, TokenInterface>,
     /// CHECK: checked by constraint and in cpi
@@ -273,6 +279,33 @@ impl<'info> FillOrder<'info> {
             0, // decimals = 0
         )
     }
+
+    #[inline(never)]
+    fn transfer_fee(&self, signer_seeds: &[&[&[u8]]], is_buy: bool, amount: u64) -> Result<()> {
+        let cpi_ctx = if is_buy {
+            CpiContext::new_with_signer(
+                self.payment_token_program.to_account_info(),
+                TransferChecked {
+                    from: self.buyer_payment_ta.to_account_info(),
+                    to: self.fee_recipient_ta.to_account_info(),
+                    authority: self.order.to_account_info(),
+                    mint: self.payment_mint.to_account_info(),
+                },
+                signer_seeds,
+            )
+        } else {
+            CpiContext::new(
+                self.payment_token_program.to_account_info(),
+                TransferChecked {
+                    from: self.buyer_payment_ta.to_account_info(),
+                    to: self.fee_recipient_ta.to_account_info(),
+                    authority: self.taker.to_account_info(),
+                    mint: self.payment_mint.to_account_info(),
+                }
+            )
+        };
+        transfer_checked(cpi_ctx, amount, self.payment_mint.decimals)
+    }
 }
 
 /// Initializer is the buyer and is buying an nft from the seller
@@ -290,9 +323,9 @@ pub fn handler<'info>(ctx: Context<'_, '_, '_, 'info, FillOrder<'info>>) -> Resu
     let signer_seeds: &[&[&[u8]]; 1] = &[&[ORDER_SEED, ctx.accounts.order.nonce.as_ref(), ctx.accounts.order.market.as_ref(), ctx.accounts.order.owner.as_ref(), bump][..]];
 
     let buy_price = ctx.accounts.order.price;
-    let _fee_amount = get_fee_amount(buy_price);
+    let fee_amount = get_fee_amount(buy_price, ctx.accounts.market.fee_bps);
 
-    let mut seller_received_amount = buy_price - _fee_amount;
+    let mut seller_received_amount = buy_price - fee_amount;
 
     let is_buy = ctx.accounts.order.side == 0;
     // Verify maker + taker accounts
@@ -338,6 +371,16 @@ pub fn handler<'info>(ctx: Context<'_, '_, '_, 'info, FillOrder<'info>>) -> Resu
         &ctx.accounts.taker.to_account_info(),
         &ctx.accounts.payment_mint.to_account_info(),
         &payment_receiver,
+        &system_program,
+        &payment_token_program,
+    )?;
+
+    let fee_reciever = ctx.accounts.fee_recipient.to_account_info();
+    create_ata(
+        &ctx.accounts.fee_recipient_ta.to_account_info(),
+        &ctx.accounts.taker.to_account_info(),
+        &ctx.accounts.payment_mint.to_account_info(),
+        &fee_reciever,
         &system_program,
         &payment_token_program,
     )?;
@@ -464,6 +507,7 @@ pub fn handler<'info>(ctx: Context<'_, '_, '_, 'info, FillOrder<'info>>) -> Resu
 
     // Transfer payment
     ctx.accounts.transfer_payment(signer_seeds, is_buy, seller_received_amount)?;
+    ctx.accounts.transfer_fee(signer_seeds, is_buy, fee_amount)?;
 
     // close order account
     let size = ctx.accounts.order.size;

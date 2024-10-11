@@ -43,12 +43,6 @@ pub struct CompressedFillBuyOrder<'info> {
         bump,
     )]
     pub order: Box<Account<'info, Order>>,
-    /// CHECK: constraint
-    #[account(
-        mut,
-        constraint = treasury.key().to_string() == PROTOCOL_TREASURY
-    )]
-    pub treasury: AccountInfo<'info>,
     /// CHECK: checked in cpi
     pub tree_config: UncheckedAccount<'info>,
     /// CHECK: checked in cpi

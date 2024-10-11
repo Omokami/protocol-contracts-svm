@@ -13,6 +13,10 @@ pub struct Market {
     pub initializer: Pubkey,
     /// state representing the market - open/closed
     pub state: u8,
+    /// address that should receive market fees
+    pub fee_recipient: Pubkey,
+    /// fee basis points
+    pub fee_bps: u64,
     /// reserved space for future changes
     pub reserve: [u8; 512],
 }
@@ -45,15 +49,19 @@ pub struct MarketEditEvent {
     pub market_identifier: String,
     pub initializer: String,
     pub state: u8,
+    pub fee_recipient: String,
+    pub fee_bps: u64,
 }
 
 impl Market {
     /// initialize a new market
-    pub fn init(&mut self, market_identifier: Pubkey, initializer: Pubkey) {
+    pub fn init(&mut self, market_identifier: Pubkey, initializer: Pubkey, fee_recipient: Pubkey, fee_bps: u64) {
         self.version = MARKET_VERSION;
         self.market_identifier = market_identifier;
         self.initializer = initializer;
         self.state = MarketState::Open.into();
+        self.fee_recipient = fee_recipient;
+        self.fee_bps = fee_bps;
     }
 
     /// return true if the market is active
@@ -73,6 +81,8 @@ impl Market {
             market_identifier: self.market_identifier.to_string(),
             initializer: self.initializer.to_string(),
             state: self.state,
+            fee_recipient: self.fee_recipient.to_string(),
+            fee_bps: self.fee_bps,
         }
     }
 }

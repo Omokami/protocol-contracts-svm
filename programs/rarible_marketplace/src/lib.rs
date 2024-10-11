@@ -17,8 +17,8 @@ pub mod marketplace {
 
     /// initializer a new market
     #[inline(never)]
-    pub fn init_market(ctx: Context<InitMarket>) -> Result<()> {
-        instructions::market::init::handler(ctx)
+    pub fn init_market(ctx: Context<InitMarket>, params: InitMarketParams) -> Result<()> {
+        instructions::market::init::handler(ctx, params)
     }
 
     /// initializer a new market

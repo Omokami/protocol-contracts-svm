@@ -2,6 +2,12 @@ use anchor_lang::prelude::*;
 
 use crate::state::*;
 
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub struct InitMarketParams {
+    pub fee_recipient: Pubkey,
+    pub fee_bps: u64,
+}
+
 #[derive(Accounts)]
 #[instruction()]
 #[event_cpi]
@@ -24,18 +30,20 @@ pub struct InitMarket<'info> {
 }
 
 #[inline(always)]
-pub fn handler(ctx: Context<InitMarket>) -> Result<()> {
+pub fn handler(ctx: Context<InitMarket>, params: InitMarketParams) -> Result<()> {
     msg!("Initializing new market");
     Market::init(
         &mut ctx.accounts.market,
         ctx.accounts.market_identifier.key(),
         ctx.accounts.initializer.key(),
+        params.fee_recipient,
+        params.fee_bps,
     );
 
     emit_cpi!(Market::get_edit_event(
         &mut ctx.accounts.market.clone(),
         ctx.accounts.market.key(),
-        MarketEditType::Init,
+        MarketEditType::Init
     ));
     Ok(())
 }
