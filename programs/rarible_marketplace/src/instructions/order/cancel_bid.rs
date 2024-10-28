@@ -1,5 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{associated_token::AssociatedToken, token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked}};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token_interface::{revoke, Mint, Revoke, TokenAccount, TokenInterface},
+};
 
 use crate::{state::*, utils::get_bump_in_seed_form};
 
@@ -35,14 +38,6 @@ pub struct CancelBid<'info> {
         associated_token::token_program = payment_token_program,
     )]
     pub initializer_payment_ta: Box<InterfaceAccount<'info, TokenAccount>>,
-    #[account(
-        init_if_needed,
-        payer = initializer,
-        associated_token::mint = payment_mint,
-        associated_token::authority = order,
-        associated_token::token_program = payment_token_program,
-    )]
-    pub order_payment_ta: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(mut, constraint = payment_mint.key() == order.payment_mint)]
     pub payment_mint: Box<InterfaceAccount<'info, Mint>>,
     pub payment_token_program: Interface<'info, TokenInterface>,
@@ -51,19 +46,16 @@ pub struct CancelBid<'info> {
 }
 
 impl<'info> CancelBid<'info> {
-    fn transfer_payment(&self, signer_seeds: &[&[&[u8]]], amount: u64) -> Result<()> {
-        msg!("{:?} -- {:?}", amount,  self.order_payment_ta.key().to_string());
+    fn revoke_payment(&self, signer_seeds: &[&[&[u8]]]) -> Result<()> {
         let cpi_ctx = CpiContext::new_with_signer(
             self.payment_token_program.to_account_info(),
-            TransferChecked {
-                from: self.order_payment_ta.to_account_info(),
-                to: self.initializer_payment_ta.to_account_info(),
+            Revoke {
                 authority: self.order.to_account_info(),
-                mint: self.payment_mint.to_account_info(),
+                source: self.initializer_payment_ta.to_account_info(),
             },
-            signer_seeds
+            signer_seeds,
         );
-        transfer_checked(cpi_ctx, amount, self.payment_mint.decimals)
+        revoke(cpi_ctx)
     }
 }
 
@@ -73,11 +65,16 @@ pub fn handler(ctx: Context<CancelBid>) -> Result<()> {
     ctx.accounts.order.state = OrderState::Closed.into();
     let bump = &get_bump_in_seed_form(&ctx.bumps.order);
 
-    let signer_seeds: &[&[&[u8]]; 1] = &[&[ORDER_SEED, ctx.accounts.order.nonce.as_ref(), ctx.accounts.order.market.as_ref(), ctx.accounts.order.owner.as_ref(), bump][..]];
+    let signer_seeds: &[&[&[u8]]; 1] = &[&[
+        ORDER_SEED,
+        ctx.accounts.order.nonce.as_ref(),
+        ctx.accounts.order.market.as_ref(),
+        ctx.accounts.order.owner.as_ref(),
+        bump,
+    ][..]];
 
-    let bid_value = ctx.accounts.order.size.checked_mul(ctx.accounts.order.price).unwrap();
     // TODO Transfer funds out
-    ctx.accounts.transfer_payment(signer_seeds, bid_value)?;
+    ctx.accounts.revoke_payment(signer_seeds)?;
     emit_cpi!(Order::get_edit_event(
         &mut ctx.accounts.order.clone(),
         ctx.accounts.order.key(),

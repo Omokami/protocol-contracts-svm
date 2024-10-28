@@ -46,8 +46,9 @@ pub mod marketplace {
     #[inline(never)]
     pub fn fill_order<'info>(
         ctx: Context<'_, '_, '_, 'info, FillOrder<'info>>,
+        amount: u64,
     ) -> Result<()> {
-        instructions::order::fill::handler(ctx)
+        instructions::order::fill::handler(ctx, amount)
     }
 
     /// cancel a buy order

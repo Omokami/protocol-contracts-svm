@@ -5,7 +5,7 @@ use crate::state::*;
 
 #[derive(Accounts)]
 pub struct VerifyMint<'info> {
-    #[account(mut, 
+    #[account(mut,
         constraint = market.initializer.key() == initializer.key()
     )]
     pub initializer: Signer<'info>,

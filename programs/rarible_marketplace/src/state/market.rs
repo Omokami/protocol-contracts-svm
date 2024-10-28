@@ -1,6 +1,8 @@
 use anchor_lang::prelude::*;
 use num_enum::IntoPrimitive;
 
+use super::VERIFICATION_SEED;
+
 pub const MARKET_VERSION: u8 = 1;
 
 #[account()]
@@ -41,6 +43,17 @@ pub struct MintVerification {
     pub verified: u8,
 }
 
+pub fn get_verification_pda(nft_mint: Pubkey, market_address: Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            VERIFICATION_SEED,
+            nft_mint.as_ref(),
+            market_address.as_ref(),
+        ],
+        &crate::ID,
+    )
+}
+
 #[event]
 pub struct MarketEditEvent {
     pub edit_type: u8,
@@ -55,7 +68,13 @@ pub struct MarketEditEvent {
 
 impl Market {
     /// initialize a new market
-    pub fn init(&mut self, market_identifier: Pubkey, initializer: Pubkey, fee_recipient: Pubkey, fee_bps: u64) {
+    pub fn init(
+        &mut self,
+        market_identifier: Pubkey,
+        initializer: Pubkey,
+        fee_recipient: Pubkey,
+        fee_bps: u64,
+    ) {
         self.version = MARKET_VERSION;
         self.market_identifier = market_identifier;
         self.initializer = initializer;

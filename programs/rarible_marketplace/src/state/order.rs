@@ -133,18 +133,17 @@ impl Order {
     /// edit a buy order account
     /// if size is 0, order is closed
     /// any size change is considered partial
-    pub fn edit_buy(&mut self, new_price: u64, new_payment_mint: Pubkey, new_size: u64, time: i64) {
+    pub fn edit_order(
+        &mut self,
+        new_price: u64,
+        new_payment_mint: Pubkey,
+        new_size: u64,
+        time: i64,
+    ) {
         self.size = new_size;
         self.price = new_price;
         self.payment_mint = new_payment_mint;
         self.last_edit_time = time;
-    }
-
-    /// edit a sell order account
-    pub fn edit_sell(&mut self, new_payment_mint: Pubkey, new_price: u64, time: i64) {
-        self.price = new_price;
-        self.last_edit_time = time;
-        self.payment_mint = new_payment_mint;
     }
 
     /// return true if the order is active

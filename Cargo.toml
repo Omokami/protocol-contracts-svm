@@ -15,6 +15,7 @@ wen_royalty_distribution =  { git = "https://github.com/wen-community/wen-new-st
 mpl-token-metadata =  { version = "4.1.2", features = ["serde"] }
 mpl-bubblegum = { version = "1.4.0" }
 num_enum = "0.5.6"
+spl-token-group-interface = "=0.2.3"
 spl-transfer-hook-interface = "0.5.1"
 spl-tlv-account-resolution = "0.4.0"
 spl-pod = "0.2.2"

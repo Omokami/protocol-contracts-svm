@@ -11,17 +11,19 @@ import {
 	getMarketplaceProgram, getMarketPda, getOrderAccount, getVerificationPda, getEventAuthority, marketplaceProgramId, fetchOrderByAddress, getTokenProgramFromMint, getNftProgramFromMint, getAtaAddress,
 	getRemainingAccountsForMint,
 	type WnsAccountParams,
+	fetchMarketByAddress,
 } from '../utils';
 
-export type ListArgs = {
+export type CreateOrderArgs = {
 	marketIdentifier: string;
-	nftMint: string;
+	nftMint: string | undefined;
 	paymentMint: string;
+	size: number;
 	price: number;
 	extraAccountParams: WnsAccountParams | undefined; // Add metaplex
 };
 // List NFT
-export const getListNft = async (provider: Provider, listingArgs: ListArgs) => {
+export const getListNft = async (provider: Provider, listingArgs: CreateOrderArgs) => {
 	const marketProgram = getMarketplaceProgram(provider);
 	const market = getMarketPda(listingArgs.marketIdentifier);
 	const initializer = provider.publicKey?.toString();
@@ -29,8 +31,10 @@ export const getListNft = async (provider: Provider, listingArgs: ListArgs) => {
 		return undefined;
 	}
 
-	const nftMint = listingArgs.nftMint.toString();
-	const nftTokenProgram = await getTokenProgramFromMint(provider, listingArgs.nftMint.toString());
+	const nftMint = listingArgs.nftMint;
+	if (!nftMint) return undefined;
+
+	const nftTokenProgram = await getTokenProgramFromMint(provider, nftMint);
 	if (!nftTokenProgram) {
 		return undefined;
 	}
@@ -41,27 +45,26 @@ export const getListNft = async (provider: Provider, listingArgs: ListArgs) => {
 	const nftProgram = await getNftProgramFromMint(provider, nftMint);
 
 	const order = getOrderAccount(nonce.toString(), market.toString(), initializer);
-	const initializerNftTa = getAtaAddress(listingArgs.nftMint, initializer, nftTokenProgram.toString());
-	const orderNftTa = getAtaAddress(listingArgs.nftMint, order.toString(), nftTokenProgram.toString());
+	const initializerNftTa = getAtaAddress(nftMint, initializer, nftTokenProgram.toString());
 
-	const verification = getVerificationPda(market.toString(), listingArgs.nftMint);
+	// const verification = getVerificationPda(market.toString(), nftMint);
 	const eventAuthority = getEventAuthority();
 
 	const remainingAccounts: AccountMeta[] = await getRemainingAccountsForMint(provider, nftMint, listingArgs.extraAccountParams);
 
+	
 	const ix = await marketProgram.methods
 		.list({
 			nonce,
 			paymentMint: new PublicKey(listingArgs.paymentMint),
 			price: new BN(listingArgs.price),
+			size: new BN(listingArgs.size)
 		})
 		.accountsStrict({
 			initializer: provider.publicKey,
 			market,
-			nftMint: listingArgs.nftMint,
+			nftMint,
 			order,
-			verification,
-			orderNftTa,
 			initializerNftTa,
 			nftProgram: nftProgram ?? PublicKey.default,
 			nftTokenProgram,
@@ -77,16 +80,7 @@ export const getListNft = async (provider: Provider, listingArgs: ListArgs) => {
 	return ix;
 };
 
-// Bid on NFT
-export type BidArgs = {
-	marketIdentifier: string;
-	nftMint: string | undefined; // Can be default key or a specific NFT or other identifier
-	paymentMint: string;
-	price: number;
-	size: number;
-};
-
-export const getBid = async (provider: Provider, biddingArgs: BidArgs) => {
+export const getBid = async (provider: Provider, biddingArgs: CreateOrderArgs) => {
 	const marketProgram = getMarketplaceProgram(provider);
 	const market = getMarketPda(biddingArgs.marketIdentifier);
 	const initializer = provider.publicKey?.toString();
@@ -119,7 +113,6 @@ export const getBid = async (provider: Provider, biddingArgs: BidArgs) => {
 			market,
 			nftMint: biddingArgs.nftMint ?? PublicKey.default,
 			order,
-			orderPaymentTa,
 			initializerPaymentTa,
 			paymentTokenProgram,
 			associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -133,7 +126,7 @@ export const getBid = async (provider: Provider, biddingArgs: BidArgs) => {
 	return ix;
 };
 
-export const fillOrder = async (provider: Provider, orderAddress: string, nftMint: string, extraAccountParams: WnsAccountParams | undefined) => {
+export const fillOrder = async (provider: Provider, orderAddress: string, amountToFill: number, nftMint: string, extraAccountParams: WnsAccountParams | undefined) => {
 	const marketProgram = getMarketplaceProgram(provider);
 	const initializer = provider.publicKey?.toString();
 	if (!initializer) {
@@ -142,6 +135,11 @@ export const fillOrder = async (provider: Provider, orderAddress: string, nftMin
 
 	const order = await fetchOrderByAddress(provider, orderAddress);
 	if (!order) {
+		return undefined;
+	}
+
+	const market = await fetchMarketByAddress(provider, order.market.toString());
+	if (!market) {
 		return undefined;
 	}
 
@@ -156,8 +154,8 @@ export const fillOrder = async (provider: Provider, orderAddress: string, nftMin
 	const isBuy = order.side === 0;
 
 	const nftRecipient = isBuy ? order.owner.toString() : initializer;
-	const nftFunder = isBuy ? initializer : orderAddress;
-	const paymentFunder = isBuy ? orderAddress : initializer.toString();
+	const nftFunder = isBuy ? initializer : order.owner.toString();
+	const paymentFunder = isBuy ? order.owner.toString() : initializer.toString();
 	const paymentRecipient = isBuy ? initializer : order.owner.toString();
 
 	const buyerPaymentTa = getAtaAddress(order.paymentMint.toString(), paymentFunder, paymentTokenProgram.toString());
@@ -165,13 +163,16 @@ export const fillOrder = async (provider: Provider, orderAddress: string, nftMin
 	const buyerNftTa = getAtaAddress(nftMint, nftRecipient, nftTokenProgram.toString());
 	const sellerNftTa = getAtaAddress(nftMint, nftFunder, nftTokenProgram.toString());
 
+	const feeRecipient = market.feeRecipient;
+	const feeRecipientTa = getAtaAddress(order.paymentMint.toString(), feeRecipient.toString(), paymentTokenProgram.toString());
+
 	const verification = getVerificationPda(order.market.toString(), nftMint);
 	const eventAuthority = getEventAuthority();
 
 	const remainingAccounts: AccountMeta[] = await getRemainingAccountsForMint(provider, nftMint, extraAccountParams);
 
 	const ix = await marketProgram.methods
-		.fillOrder()
+		.fillOrder(new BN(amountToFill))
 		.accountsStrict({
 			taker: provider.publicKey,
 			maker: order.owner,
@@ -192,6 +193,8 @@ export const fillOrder = async (provider: Provider, orderAddress: string, nftMin
 			nftMint,
 			verification,
 			sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+			feeRecipient,
+			feeRecipientTa
 		})
 		.remainingAccounts(remainingAccounts)
 		.instruction();
@@ -220,7 +223,6 @@ export const getCancelListing = async (provider: Provider, orderAddress: PublicK
 	}
 
 	const initializerNftTa = getAtaAddress(nftMint.toString(), initializer, nftTokenProgram.toString());
-	const orderNftTa = getAtaAddress(nftMint.toString(), orderAddress.toString(), nftTokenProgram.toString());
 
 	const nftProgram = await getNftProgramFromMint(provider, nftMint.toString());
 
@@ -234,7 +236,6 @@ export const getCancelListing = async (provider: Provider, orderAddress: PublicK
 			market: order.market,
 			nftMint,
 			order: orderAddress,
-			orderNftTa,
 			initializerNftTa,
 			nftProgram: nftProgram ?? PublicKey.default,
 			nftTokenProgram,
@@ -270,7 +271,6 @@ export const getCancelBid = async (provider: Provider, orderAddress: PublicKey) 
 	}
 
 	const initializerPaymentTa = getAtaAddress(paymentMint, initializer, paymentTokenProgram.toString());
-	const orderPaymentTa = getAtaAddress(paymentMint, orderAddress.toString(), paymentTokenProgram.toString());
 
 	const eventAuthority = getEventAuthority();
 
@@ -281,7 +281,6 @@ export const getCancelBid = async (provider: Provider, orderAddress: PublicKey) 
 			market: order.market,
 			paymentMint,
 			order: orderAddress,
-			orderPaymentTa,
 			initializerPaymentTa,
 			paymentTokenProgram,
 			associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,

@@ -27,3 +27,4 @@ mpl-token-metadata = { workspace = true }
 mpl-bubblegum = { workspace = true }
 num_enum = { workspace = true }
 wen_new_standard = { workspace = true }
+spl-token-group-interface = "0.2.3"

@@ -1,24 +1,31 @@
 import {
+	PublicKey,
 	SystemProgram,
 } from '@solana/web3.js';
-import {type Provider} from '@coral-xyz/anchor';
+import {type Provider, BN} from '@coral-xyz/anchor';
 import {
 	getEventAuthority, getMarketPda, getMarketplaceProgram,
 	getVerificationPda,
 	marketplaceProgramId,
 } from '../utils';
 
+export type InitMarketParams = {
+	marketIdentifier: string;
+	feeRecipient: string;
+	feeBps: number;
+};
+
 // Initialize Market
-export const getInitializeMarket = async (provider: Provider, marketIdentifier: string) => {
+export const getInitializeMarket = async (provider: Provider, marketParams: InitMarketParams) => {
 	const marketProgram = getMarketplaceProgram(provider);
-	const market = getMarketPda(marketIdentifier);
+	const market = getMarketPda(marketParams.marketIdentifier);
 	const eventAuthority = getEventAuthority();
 
 	const ix = await marketProgram.methods
-		.initMarket()
+		.initMarket({ feeBps: new BN(marketParams.feeBps), feeRecipient: new PublicKey(marketParams.feeRecipient) })
 		.accountsStrict({
 			initializer: provider.publicKey,
-			marketIdentifier,
+			marketIdentifier: marketParams.marketIdentifier,
 			market,
 			systemProgram: SystemProgram.programId,
 			program: marketplaceProgramId,

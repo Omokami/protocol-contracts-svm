@@ -145,63 +145,6 @@ export type Marketplace = {
           }
         },
         {
-          "name": "orderPaymentTa",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "order"
-              },
-              {
-                "kind": "account",
-                "path": "paymentTokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "paymentMint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
           "name": "paymentMint",
           "writable": true
         },
@@ -397,63 +340,6 @@ export type Marketplace = {
           }
         },
         {
-          "name": "orderPaymentTa",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "order"
-              },
-              {
-                "kind": "account",
-                "path": "paymentTokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "paymentMint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
           "name": "paymentMint",
           "writable": true
         },
@@ -585,10 +471,6 @@ export type Marketplace = {
         },
         {
           "name": "initializerNftTa",
-          "writable": true
-        },
-        {
-          "name": "orderNftTa",
           "writable": true
         },
         {
@@ -770,6 +652,14 @@ export type Marketplace = {
           "writable": true
         },
         {
+          "name": "feeRecipient",
+          "writable": true
+        },
+        {
+          "name": "feeRecipientTa",
+          "writable": true
+        },
+        {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         },
@@ -835,7 +725,12 @@ export type Marketplace = {
           "name": "program"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "initMarket",
@@ -921,7 +816,16 @@ export type Marketplace = {
           "name": "program"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "initMarketParams"
+            }
+          }
+        }
+      ]
     },
     {
       "name": "list",
@@ -998,38 +902,6 @@ export type Marketplace = {
           }
         },
         {
-          "name": "verification",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  118,
-                  101,
-                  114,
-                  105,
-                  102,
-                  105,
-                  99,
-                  97,
-                  116,
-                  105,
-                  111,
-                  110
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "nftMint"
-              },
-              {
-                "kind": "account",
-                "path": "market"
-              }
-            ]
-          }
-        },
-        {
           "name": "nftMint"
         },
         {
@@ -1040,63 +912,6 @@ export type Marketplace = {
               {
                 "kind": "account",
                 "path": "initializer"
-              },
-              {
-                "kind": "account",
-                "path": "nftTokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "nftMint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "orderNftTa",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "order"
               },
               {
                 "kind": "account",
@@ -1353,18 +1168,28 @@ export type Marketplace = {
     },
     {
       "code": 6001,
+      "name": "insufficientOrderSize",
+      "msg": "Order too small"
+    },
+    {
+      "code": 6002,
       "name": "amountOverflow",
       "msg": "Amount overflow"
     },
     {
-      "code": 6002,
+      "code": 6003,
       "name": "amountUnderflow",
       "msg": "Amount underflow"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "unsupportedNft",
       "msg": "Unsupported NFT Type"
+    },
+    {
+      "code": 6005,
+      "name": "invalidNft",
+      "msg": "Invalid NFT for Market"
     }
   ],
   "types": [
@@ -1389,6 +1214,22 @@ export type Marketplace = {
       }
     },
     {
+      "name": "initMarketParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "feeRecipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "feeBps",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "listData",
       "type": {
         "kind": "struct",
@@ -1403,6 +1244,10 @@ export type Marketplace = {
           },
           {
             "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "size",
             "type": "u64"
           }
         ]
@@ -1440,6 +1285,20 @@ export type Marketplace = {
               "state representing the market - open/closed"
             ],
             "type": "u8"
+          },
+          {
+            "name": "feeRecipient",
+            "docs": [
+              "address that should receive market fees"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "feeBps",
+            "docs": [
+              "fee basis points"
+            ],
+            "type": "u64"
           },
           {
             "name": "reserve",
@@ -1484,6 +1343,14 @@ export type Marketplace = {
           {
             "name": "state",
             "type": "u8"
+          },
+          {
+            "name": "feeRecipient",
+            "type": "string"
+          },
+          {
+            "name": "feeBps",
+            "type": "u64"
           }
         ]
       }

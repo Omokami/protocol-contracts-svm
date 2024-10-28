@@ -1,21 +1,25 @@
 import { Keypair, MessageV0, PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
-import { BidArgs, getCancelBid, fetchOrdersByMarket, fetchOrdersByMint, fetchOrdersByUser, fillOrder, getBid, getCancelListing, getComputeBudgetInstructions, getInitializeMarket, getListNft, getMarketPda, getOrderAccount, getProvider, getVerifyMint, ListArgs } from "../clients/rarible-svm-ts/src";
+import { CreateOrderArgs, getCancelBid, fetchOrdersByMarket, fetchOrdersByMint, fetchOrdersByUser, fillOrder, getBid, getCancelListing, getComputeBudgetInstructions, getInitializeMarket, getListNft, getMarketPda, getOrderAccount, getProvider, getVerifyMint } from "../clients/rarible-svm-ts/src";
 
 const demoMarket = {
-    marketIdentifier: new PublicKey("93zMBLNjEVpnT1jk9CHMscM7wbT7rE2ydvCxd3XGM1Vy"),
-    wnsGroup: "EXJB8YFiBpFeBbjq9PZhCsav2RfcZVeuBvT9t3jBuY5f",
+    marketIdentifier: new PublicKey("5hHaru7wRzFzHs9Fm7DK2vCXEC6v8zN9xutXYLHpEqG"),
+    wnsGroupMint: "EXJB8YFiBpFeBbjq9PZhCsav2RfcZVeuBvT9t3jBuY5f",
     paymentMint: "GRhhJGyjkHYcVmvKTb8okbPZD6HMYZrAcWpyN4R3bK5n",
+    feeRecipient: "yaoYaopKcDsMxnjbT1jBdvYz6XRmjPdAPHczsCraERc",
+    feeBps: 250
 };
 
 const mintsToVerify = ["4swpX19vkSyd2TLM2W2FcsHorkvh25aEg4b35H4Vf2Wv", "71xkPoBLf5DRmCkPJo9czuNL3docUuweeDARABcNsaVy", "CchC7gtAUL1bDbuomRkjupySAZcMAygRb983r3qnkXFv"];
 
 const listingData = [{
-        nftMint: "4swpX19vkSyd2TLM2W2FcsHorkvh25aEg4b35H4Vf2Wv",
+        nftMint: "GuZAVbfynbknUjdLHN8KtNgrovXHiHr8YXdfpAqWYTWQ",
         price: 150000,
+        size: 1,
     },
     {
-        nftMint: "71xkPoBLf5DRmCkPJo9czuNL3docUuweeDARABcNsaVy",
+        nftMint: "AYAdGBShZoZDWguv9T2rGCyeTTo8oXURvPFPhhQxwkBG",
         price: 240000,
+        size: 1,
     }
 ];
 
@@ -32,12 +36,12 @@ const biddingData = [
 }
 ];
 
-const nftToSell = "4swpX19vkSyd2TLM2W2FcsHorkvh25aEg4b35H4Vf2Wv";
+const nftToSell = "GuZAVbfynbknUjdLHN8KtNgrovXHiHr8YXdfpAqWYTWQ";
 
 async function setupMarket() {
     const provider = getProvider();
-    const { marketIdentifier } = demoMarket;
-    const createMarketIx = await getInitializeMarket(provider, marketIdentifier.toString());
+    const { marketIdentifier, feeBps, feeRecipient } = demoMarket;
+    const createMarketIx = await getInitializeMarket(provider, { marketIdentifier: marketIdentifier.toString(), feeBps, feeRecipient: feeRecipient });
     const recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
     const message = MessageV0.compile({ payerKey: provider.publicKey, instructions: [createMarketIx], recentBlockhash, })
     const tx = new VersionedTransaction(message);
@@ -76,17 +80,18 @@ async function verifyMints() {
 
 async function listNfts() {
     const provider = getProvider();
-    const { marketIdentifier, paymentMint, wnsGroup } = demoMarket;
+    const { marketIdentifier, paymentMint, wnsGroupMint } = demoMarket;
 
     const wnsParams = {
-        groupMint: wnsGroup,
+        groupMint: wnsGroupMint,
         paymentMint
     };
-    const listings: ListArgs[] = listingData.map((m) => { return {
+    const listings: CreateOrderArgs[] = listingData.map((m) => { return {
         marketIdentifier: marketIdentifier.toString(),
         nftMint: m.nftMint,
         paymentMint,
         price: m.price,
+        size: 1,
         extraAccountParams: wnsParams,
     }})
     
@@ -112,13 +117,14 @@ async function bid() {
     const provider = getProvider();
     const { marketIdentifier, paymentMint } = demoMarket;
 
-    const bids: BidArgs[] = biddingData.map(b => {
+    const bids: CreateOrderArgs[] = biddingData.map(b => {
         return {
             marketIdentifier: marketIdentifier.toString(),
             paymentMint,
             price: b.price,
             size: b.size,
             nftMint: b.nftMint,
+            extraAccountParams: undefined,
         }
     });
 
@@ -141,12 +147,12 @@ async function bid() {
 
 async function sellNft() {
     const provider = getProvider();
-    const { marketIdentifier, paymentMint, wnsGroup } = demoMarket;
+    const { marketIdentifier, paymentMint, wnsGroupMint } = demoMarket;
 
     const marketAddress = getMarketPda(marketIdentifier.toString());
 
     const wnsParams = {
-        groupMint: wnsGroup,
+        groupMint: wnsGroupMint,
         paymentMint
     };
 
@@ -154,7 +160,7 @@ async function sellNft() {
     const topBid = activeOrders.filter(o => o.account.side == 0).sort((a, b) => b.account.price.toNumber() - a.account.price.toNumber()).pop();
 
     if (topBid !== undefined) {
-        const buyNftIx = await fillOrder(provider, topBid.publicKey.toString(), nftToSell, wnsParams);
+        const buyNftIx = await fillOrder(provider, topBid.publicKey.toString(), 1, nftToSell, wnsParams);
         
         const computeIxs = getComputeBudgetInstructions({ computeUnits: 500_000 });
         const recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
@@ -178,9 +184,9 @@ async function buyNft() {
 
     const marketAddress = getMarketPda(marketIdentifier.toString());
 
-    const {paymentMint, wnsGroup} = demoMarket;
+    const {paymentMint, wnsGroupMint} = demoMarket;
     const wnsParams = {
-        groupMint: wnsGroup,
+        groupMint: wnsGroupMint,
         paymentMint
     };
    
@@ -188,7 +194,7 @@ async function buyNft() {
     const floorNft = activeOrders.filter(o => o.account.side == 1).sort((a, b) => a.account.price.toNumber() - b.account.price.toNumber()).pop();
 
     if (floorNft !== undefined) {
-        const buyNftIx = await fillOrder(provider, floorNft.publicKey.toString(), floorNft.account.nftMint.toString(), wnsParams);
+        const buyNftIx = await fillOrder(provider, floorNft.publicKey.toString(), 1, floorNft.account.nftMint.toString(), wnsParams);
         
         const computeIxs = getComputeBudgetInstructions({ computeUnits: 500_000 });
         const recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
@@ -208,10 +214,10 @@ async function buyNft() {
 
 async function cancelListings() {
     const provider = getProvider();
-    const { paymentMint, wnsGroup } = demoMarket;
+    const { paymentMint, wnsGroupMint } = demoMarket;
 
     const wnsParams = {
-        groupMint: wnsGroup,
+        groupMint: wnsGroupMint,
         paymentMint
     };
    
@@ -258,9 +264,9 @@ async function cancelBids() {
     }
 }
 
-setupMarket();
+// setupMarket();
 // verifyMints();
-// listNfts();
+listNfts();
 // bid();
 // sellNfts();
 // buyNfts();

@@ -1,10 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::*;
 
-use crate::utils::metaplex::pnft::{
-    transfer::metaplex_transfer,
-    utils::AuthorizationDataLocal,
-};
+use crate::utils::metaplex::pnft::{transfer::metaplex_transfer, utils::AuthorizationDataLocal};
 
 pub struct MetaplexAdditionalTransferAccounts<'info> {
     pub metadata: AccountInfo<'info>,

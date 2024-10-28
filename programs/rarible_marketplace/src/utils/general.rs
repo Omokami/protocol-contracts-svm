@@ -1,14 +1,15 @@
 use anchor_lang::{
-    prelude::{AccountInfo, Pubkey, Result}, require, solana_program::{
+    prelude::{AccountInfo, Pubkey, Result},
+    require,
+    solana_program::{
         program::{invoke, invoke_signed},
         system_instruction::transfer,
-    }, ToAccountInfo
+    },
+    ToAccountInfo,
 };
 use anchor_spl::associated_token::{get_associated_token_address, spl_associated_token_account};
 use mpl_token_metadata::accounts::Metadata;
-use mpl_token_metadata::types::{
-    AuthorizationData, TokenStandard,
-};
+use mpl_token_metadata::types::{AuthorizationData, TokenStandard};
 
 use crate::errors::MarketError;
 
@@ -54,10 +55,8 @@ pub fn get_is_metaplex_nft(nft_account_info: &AccountInfo) -> bool {
 }
 
 fn get_pnft_params(ra: Vec<AccountInfo>) -> PnftParams {
-
     let fourth_account = ra.get(3).cloned().unwrap();
-    let dest_token_record =
-    if *fourth_account.key == Pubkey::default() {
+    let dest_token_record = if *fourth_account.key == Pubkey::default() {
         None
     } else {
         Some(fourth_account)
@@ -156,7 +155,6 @@ fn parse_delegate_record(remaining_accounts: Vec<AccountInfo>) -> Option<Account
         Some(account_0)
     }
 }
-
 
 /*
 REMAINING ACCOUNTS:
@@ -285,7 +283,7 @@ pub fn validate_associated_token_account(
     token_program: &Pubkey,
 ) -> Result<()> {
     let expected_ata = get_associated_token_address(owner, mint);
-    
+
     require!(
         token_account.key == &expected_ata,
         MarketError::WrongAccount
@@ -299,7 +297,6 @@ pub fn validate_associated_token_account(
     Ok(())
 }
 
-
 #[inline(never)]
 pub fn create_ata<'info>(
     ata: &AccountInfo<'info>,
@@ -310,7 +307,11 @@ pub fn create_ata<'info>(
     token_program: &AccountInfo<'info>,
 ) -> Result<()> {
     if *ata.key
-        != spl_associated_token_account::get_associated_token_address_with_program_id(owner.key, mint.key, token_program.key)
+        != spl_associated_token_account::get_associated_token_address_with_program_id(
+            owner.key,
+            mint.key,
+            token_program.key,
+        )
     {
         return Err(MarketError::WrongAccount.into());
     }
@@ -319,12 +320,7 @@ pub fn create_ata<'info>(
         return Ok(());
     }
 
-    let ix = create_associated_token_account(
-        payer.key,
-        owner.key,
-        mint.key,
-        token_program.key,
-    );
+    let ix = create_associated_token_account(payer.key, owner.key, mint.key, token_program.key);
 
     invoke(
         &ix,
