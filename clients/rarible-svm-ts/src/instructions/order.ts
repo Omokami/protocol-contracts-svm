@@ -114,6 +114,7 @@ export const getBid = async (provider: Provider, biddingArgs: CreateOrderArgs) =
 			nftMint: biddingArgs.nftMint ?? PublicKey.default,
 			order,
 			initializerPaymentTa,
+			orderPaymentTa,
 			paymentTokenProgram,
 			associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
 			systemProgram: SystemProgram.programId,
@@ -128,6 +129,7 @@ export const getBid = async (provider: Provider, biddingArgs: CreateOrderArgs) =
 
 export const fillOrder = async (provider: Provider, orderAddress: string, amountToFill: number, nftMint: string, extraAccountParams: WnsAccountParams | undefined) => {
 	const marketProgram = getMarketplaceProgram(provider);
+	console.log(orderAddress);
 	const initializer = provider.publicKey?.toString();
 	if (!initializer) {
 		return undefined;
@@ -155,7 +157,7 @@ export const fillOrder = async (provider: Provider, orderAddress: string, amount
 
 	const nftRecipient = isBuy ? order.owner.toString() : initializer;
 	const nftFunder = isBuy ? initializer : order.owner.toString();
-	const paymentFunder = isBuy ? order.owner.toString() : initializer.toString();
+	const paymentFunder = isBuy ? orderAddress : initializer.toString();
 	const paymentRecipient = isBuy ? initializer : order.owner.toString();
 
 	const buyerPaymentTa = getAtaAddress(order.paymentMint.toString(), paymentFunder, paymentTokenProgram.toString());
@@ -166,7 +168,6 @@ export const fillOrder = async (provider: Provider, orderAddress: string, amount
 	const feeRecipient = market.feeRecipient;
 	const feeRecipientTa = getAtaAddress(order.paymentMint.toString(), feeRecipient.toString(), paymentTokenProgram.toString());
 
-	const verification = getVerificationPda(order.market.toString(), nftMint);
 	const eventAuthority = getEventAuthority();
 
 	const remainingAccounts: AccountMeta[] = await getRemainingAccountsForMint(provider, nftMint, extraAccountParams);
@@ -191,7 +192,6 @@ export const fillOrder = async (provider: Provider, orderAddress: string, amount
 			eventAuthority,
 			paymentMint: order.paymentMint,
 			nftMint,
-			verification,
 			sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
 			feeRecipient,
 			feeRecipientTa
@@ -271,6 +271,7 @@ export const getCancelBid = async (provider: Provider, orderAddress: PublicKey) 
 	}
 
 	const initializerPaymentTa = getAtaAddress(paymentMint, initializer, paymentTokenProgram.toString());
+	const orderPaymentTa = getAtaAddress(paymentMint, orderAddress.toString(), paymentTokenProgram.toString());
 
 	const eventAuthority = getEventAuthority();
 
@@ -282,6 +283,7 @@ export const getCancelBid = async (provider: Provider, orderAddress: PublicKey) 
 			paymentMint,
 			order: orderAddress,
 			initializerPaymentTa,
+			orderPaymentTa,
 			paymentTokenProgram,
 			associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
 			systemProgram: SystemProgram.programId,

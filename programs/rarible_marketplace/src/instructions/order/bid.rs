@@ -1,8 +1,6 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token_interface::{approve, Approve, Mint, TokenAccount, TokenInterface},
-};
+use anchor_spl::{associated_token::AssociatedToken, token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked}};
+
 
 use crate::state::*;
 
@@ -45,6 +43,14 @@ pub struct BidNft<'info> {
         associated_token::token_program = payment_token_program,
     )]
     pub initializer_payment_ta: Box<InterfaceAccount<'info, TokenAccount>>,
+    #[account(
+        init_if_needed,
+        payer = initializer,
+        associated_token::mint = payment_mint,
+        associated_token::authority = order,
+        associated_token::token_program = payment_token_program,
+    )]
+    pub order_payment_ta: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(mut)]
     pub payment_mint: Box<InterfaceAccount<'info, Mint>>,
     pub payment_token_program: Interface<'info, TokenInterface>,
@@ -55,16 +61,17 @@ pub struct BidNft<'info> {
 }
 
 impl<'info> BidNft<'info> {
-    fn delegate_payment(&self, amount: u64) -> Result<()> {
+    fn transfer_payment(&self, amount: u64) -> Result<()> {
         let cpi_ctx = CpiContext::new(
             self.payment_token_program.to_account_info(),
-            Approve {
-                to: self.initializer_payment_ta.to_account_info(),
+            TransferChecked {
+                from: self.initializer_payment_ta.to_account_info(),
+                to: self.order_payment_ta.to_account_info(),
                 authority: self.initializer.to_account_info(),
-                delegate: self.order.to_account_info(),
-            },
+                mint: self.payment_mint.to_account_info(),
+            }
         );
-        approve(cpi_ctx, amount)
+        transfer_checked(cpi_ctx, amount, self.payment_mint.decimals)
     }
 }
 
@@ -74,9 +81,9 @@ pub fn handler(ctx: Context<BidNft>, data: BidData) -> Result<()> {
 
     let clock = Clock::get()?;
     let bid_value = data.size.checked_mul(data.price).unwrap();
-    // Transfer bid funds TODO;
 
-    ctx.accounts.delegate_payment(bid_value)?;
+    // Transfer bid funds TODO;
+    ctx.accounts.transfer_payment(bid_value)?;
     // create a new order with size 1
     Order::init(
         &mut ctx.accounts.order,

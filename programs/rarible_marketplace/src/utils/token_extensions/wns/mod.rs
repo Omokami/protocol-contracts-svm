@@ -18,7 +18,6 @@ pub fn verify_wns_mint<'info>(mint: AccountInfo<'info>, wns_member_acc: AccountI
     let group_id = wns_member.group;
     let member_mint = wns_member.mint;
 
-    msg!("{:?} {:?} {:?}", group_id.to_string(), group_info.member_address.0.to_string(), member_mint.to_string());
     if group_info.member_address.0 != wns_member_acc.key() {
         return Err(MarketError::InvalidNft.into());
     }

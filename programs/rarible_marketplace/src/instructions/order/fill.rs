@@ -1,16 +1,17 @@
-use std::collections::HashMap;
 use std::str::FromStr;
 
 use anchor_lang::{prelude::*, solana_program::sysvar};
 use anchor_spl::{
-    associated_token::{get_associated_token_address, AssociatedToken},
+    associated_token::AssociatedToken,
+    token_2022::spl_token_2022::instruction::transfer_checked as transfer_2022,
     token_interface::{
-        approve, revoke, transfer_checked, Approve, Mint, Revoke, TokenInterface, TransferChecked,
+        transfer_checked, Mint, TokenInterface, TransferChecked,
     },
 };
-use mpl_token_metadata::accounts::Metadata;
+use spl_transfer_hook_interface::onchain::add_extra_accounts_for_execute_cpi;
+
 use wen_new_standard::{
-    cpi::{accounts::{ApproveTransfer, ThawDelegatedAccount}, approve_transfer, thaw_mint_account},
+    cpi::{accounts::ApproveTransfer, approve_transfer},
     utils::get_mint_metadata,
     ROYALTY_BASIS_POINTS_FIELD,
 };
@@ -20,14 +21,7 @@ use crate::{
     state::*,
     utils::{
         create_ata, get_amount_from_bp, get_bump_in_seed_form, get_fee_amount,
-        metaplex::pnft::utils::get_is_pnft,
-        mplx_transfer::{
-            transfer_metaplex_nft, ExtraTransferParams, MetaplexAdditionalTransferAccounts,
-            TransferMetaplexNft,
-        },
-        parse_remaining_accounts_pnft,
-        token_extensions::WnsApprovalAccounts,
-        validate_associated_token_account, verify_wns_mint,
+        token_extensions::WnsApprovalAccounts, verify_wns_mint,
     },
 };
 
@@ -62,12 +56,6 @@ pub struct FillOrder<'info> {
     pub order: Box<Account<'info, Order>>,
     #[account(mut)]
     pub nft_mint: Box<InterfaceAccount<'info, Mint>>,
-    #[account(
-        seeds = [VERIFICATION_SEED, nft_mint.key().as_ref(), market.key().as_ref()],
-        bump,
-        constraint = verification.verified == 1
-    )]
-    pub verification: Box<Account<'info, MintVerification>>,
     #[account(mut)]
     /// CHECK: checked by create_ata function
     pub seller_nft_ta: UncheckedAccount<'info>,
@@ -125,121 +113,6 @@ impl<'info> FillOrder<'info> {
             )
         };
         transfer_checked(cpi_ctx, amount, self.payment_mint.decimals)
-    }
-
-    #[inline(never)]
-    fn transfer_royalty(
-        &self,
-        signer_seeds: &[&[&[u8]]],
-        creator_token_account: &AccountInfo<'info>,
-        is_buy: bool,
-        amount: u64,
-    ) -> Result<()> {
-        let cpi_ctx = if is_buy {
-            CpiContext::new_with_signer(
-                self.payment_token_program.to_account_info(),
-                TransferChecked {
-                    from: self.buyer_payment_ta.to_account_info(),
-                    to: creator_token_account.to_account_info(),
-                    authority: self.order.to_account_info(),
-                    mint: self.payment_mint.to_account_info(),
-                },
-                signer_seeds,
-            )
-        } else {
-            CpiContext::new(
-                self.payment_token_program.to_account_info(),
-                TransferChecked {
-                    from: self.buyer_payment_ta.to_account_info(),
-                    to: creator_token_account.to_account_info(),
-                    authority: self.taker.to_account_info(),
-                    mint: self.payment_mint.to_account_info(),
-                },
-            )
-        };
-        transfer_checked(cpi_ctx, amount, self.payment_mint.decimals)
-    }
-
-    fn wns_thaw(
-        &self,
-        signer_seeds: &[&[&[u8]]],
-        seller_account: AccountInfo<'info>,
-        manager_account: AccountInfo<'info>,
-        remaining_accounts: Vec<AccountInfo<'info>>,
-    ) -> Result<()> {
-        
-        let thaw_cpi = CpiContext::new_with_signer(
-            self.nft_program.to_account_info(),
-            ThawDelegatedAccount {
-                mint: self.nft_mint.to_account_info(),
-                user: seller_account.to_account_info(),
-                delegate_authority: self.order.to_account_info(),
-                mint_token_account: self.seller_nft_ta.to_account_info(),
-                manager: manager_account.to_account_info(),
-                token_program: self.nft_token_program.to_account_info(),
-            },
-            signer_seeds
-        );
-
-        thaw_mint_account(
-            thaw_cpi.with_remaining_accounts(remaining_accounts)
-        )
-    }
-
-    /*
-        Metaplex Transfer Instructions
-    */
-    #[inline(never)]
-    fn metaplex_nft_transfer(
-        &self,
-        is_buy: bool,
-        is_pnft: bool,
-        extra_transfer_accounts: MetaplexAdditionalTransferAccounts<'info>,
-    ) -> Result<()> {
-        let transfer_accounts = if is_buy {
-            TransferMetaplexNft {
-                authority: self.taker.to_account_info(),
-                payer: self.taker.to_account_info(),
-                source_owner: self.taker.to_account_info(),
-                source_ta: self.seller_nft_ta.to_account_info(),
-                destination_owner: self.maker.to_account_info(),
-                destination_ta: self.buyer_nft_ta.to_account_info(),
-                mint: self.nft_mint.to_account_info(),
-                metadata: extra_transfer_accounts.metadata.to_account_info(),
-                edition: extra_transfer_accounts.edition.to_account_info(),
-                system_program: self.system_program.to_account_info(),
-                instructions: self.sysvar_instructions.to_account_info(),
-                token_program: self.nft_token_program.to_account_info(),
-                ata_program: self.associated_token_program.to_account_info(),
-            }
-        } else {
-            TransferMetaplexNft {
-                authority: self.order.to_account_info(),
-                payer: self.taker.to_account_info(),
-                source_owner: self.order.to_account_info(),
-                source_ta: self.seller_nft_ta.to_account_info(),
-                destination_owner: self.taker.to_account_info(),
-                destination_ta: self.buyer_nft_ta.to_account_info(),
-                mint: self.nft_mint.to_account_info(),
-                metadata: extra_transfer_accounts.metadata.to_account_info(),
-                edition: extra_transfer_accounts.edition.to_account_info(),
-                system_program: self.system_program.to_account_info(),
-                instructions: self.sysvar_instructions.to_account_info(),
-                token_program: self.nft_token_program.to_account_info(),
-                ata_program: self.associated_token_program.to_account_info(),
-            }
-        };
-
-        let cpi_program = self.nft_program.to_account_info();
-
-        let transfer_ctx = CpiContext::new(cpi_program, transfer_accounts);
-        // transfer nft
-        transfer_metaplex_nft(
-            transfer_ctx,
-            extra_transfer_accounts.extra_accounts,
-            1,
-            is_pnft,
-        )
     }
 
     /*
@@ -317,51 +190,52 @@ impl<'info> FillOrder<'info> {
         amount: u64,
         remaining_accounts: Vec<AccountInfo<'info>>,
     ) -> Result<()> {
-        let transfer_cpi = if is_buy {
-            CpiContext::new(
-                self.nft_token_program.to_account_info(),
-                TransferChecked {
-                    from: self.seller_nft_ta.to_account_info(),
-                    to: self.buyer_nft_ta.to_account_info(),
-                    authority: self.taker.to_account_info(),
-                    mint: self.nft_mint.to_account_info(),
-                },
-            )
+        let authority_info = if is_buy {
+            self.taker.to_account_info().clone()
         } else {
-            CpiContext::new_with_signer(
-                self.nft_token_program.to_account_info(),
-                TransferChecked {
-                    from: self.seller_nft_ta.to_account_info(),
-                    to: self.buyer_nft_ta.to_account_info(),
-                    authority: self.order.to_account_info(),
-                    mint: self.nft_mint.to_account_info(),
-                },
-                signer_seeds,
-            )
+            self.order.to_account_info().clone()
         };
+        
+        let mut transfer_ix = transfer_2022(
+            self.nft_token_program.key,
+            self.seller_nft_ta.key,
+            self.nft_mint.to_account_info().key,
+            self.buyer_nft_ta.key,
+            authority_info.key,
+            &[],
+            amount,
+            0,
+        )?;
 
-        if !is_buy {
-            let revoke_cpi = CpiContext::new_with_signer(
-                self.nft_token_program.to_account_info(),
-                Revoke {
-                    source: self.seller_nft_ta.to_account_info(),
-                    authority: self.order.to_account_info(),
-                },
-                signer_seeds,
-            );
-            revoke(revoke_cpi)?;
-            transfer_checked(
-                transfer_cpi.with_remaining_accounts(remaining_accounts),
-                amount, // supply = 1
-                0,      // decimals = 0
-            )
-        } else {
-            transfer_checked(
-                transfer_cpi.with_remaining_accounts(remaining_accounts),
-                amount, // supply = 1
-                0,      // decimals = 0
-            )
+        let mut account_infos = vec![
+            self.seller_nft_ta.to_account_info().clone(),
+            self.nft_mint.to_account_info().clone(),
+            self.buyer_nft_ta.to_account_info().clone(),
+            authority_info.clone(),
+        ];
+
+        if remaining_accounts.len() > 0 {
+            // transfer hook
+            let additional_account_infos = remaining_accounts.clone();
+
+            let hook_program = remaining_accounts.clone().pop().unwrap();
+            
+            add_extra_accounts_for_execute_cpi(
+                &mut transfer_ix,
+                &mut account_infos,
+                &hook_program.key,
+                self.seller_nft_ta.to_account_info(),
+                self.nft_mint.to_account_info(),
+                self.buyer_nft_ta.to_account_info(),
+                authority_info,
+                amount,
+                &additional_account_infos,
+            )?;
         }
+        
+        anchor_lang::solana_program::program::invoke_signed(&transfer_ix, &account_infos, signer_seeds)?;
+
+        Ok(())
     }
 
     #[inline(never)]
@@ -391,21 +265,6 @@ impl<'info> FillOrder<'info> {
         transfer_checked(cpi_ctx, amount, self.payment_mint.decimals)
     }
 
-    fn revoke_payment_account(&self, signer_seeds: &[&[&[u8]]], is_buy: bool) -> Result<()> {
-        if is_buy {
-            let cpi_ctx = CpiContext::new_with_signer(
-                self.payment_token_program.to_account_info(),
-                Revoke {
-                    authority: self.order.to_account_info(),
-                    source: self.buyer_payment_ta.to_account_info(),
-                },
-                signer_seeds,
-            );
-            revoke(cpi_ctx)
-        } else {
-            Ok(())
-        }
-    }
 }
 
 /// Initializer is the buyer and is buying an nft from the seller
@@ -481,7 +340,7 @@ pub fn handler<'info>(
     )?;
 
     let payment_funder = if is_buy {
-        ctx.accounts.maker.to_account_info()
+        ctx.accounts.order.to_account_info()
     } else {
         ctx.accounts.taker.to_account_info()
     };
@@ -587,7 +446,7 @@ pub fn handler<'info>(
         .transfer_payment(signer_seeds, is_buy, seller_received_amount)?;
     ctx.accounts
         .transfer_fee(signer_seeds, is_buy, fee_amount)?;
-    ctx.accounts.revoke_payment_account(signer_seeds, is_buy)?;
+
     // close order account
     let size = ctx.accounts.order.size;
     let payment_mint = ctx.accounts.order.payment_mint;

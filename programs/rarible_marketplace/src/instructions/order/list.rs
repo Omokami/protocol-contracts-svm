@@ -2,7 +2,7 @@ use anchor_lang::{prelude::*, solana_program::sysvar};
 use anchor_spl::{
     associated_token::AssociatedToken,
     token_interface::{
-        approve, freeze_account, Approve, FreezeAccount, Mint, TokenAccount, TokenInterface,
+        approve, Approve, Mint, TokenAccount, TokenInterface,
     },
 };
 use wen_new_standard::cpi::{accounts::FreezeDelegatedAccount, freeze_mint_account};
@@ -103,31 +103,6 @@ impl<'info> ListNft<'info> {
         approve(
             delegate_cpi.with_remaining_accounts(remaining_accounts),
             size, // supply = 1
-        )
-    }
-
-    fn wns_freeze(
-        &self,
-        signer_seeds: &[&[&[u8]]],
-        manager_account: AccountInfo<'info>,
-        remaining_accounts: Vec<AccountInfo<'info>>,
-    ) -> Result<()> {
-        
-        let freeze_cpi = CpiContext::new_with_signer(
-            self.nft_program.to_account_info(),
-            FreezeDelegatedAccount {
-                mint: self.nft_mint.to_account_info(),
-                user: self.initializer.to_account_info(),
-                delegate_authority: self.order.to_account_info(),
-                mint_token_account: self.initializer_nft_ta.to_account_info(),
-                manager: manager_account.to_account_info(),
-                token_program: self.nft_token_program.to_account_info(),
-            },
-            signer_seeds
-        );
-
-        freeze_mint_account(
-            freeze_cpi.with_remaining_accounts(remaining_accounts)
         )
     }
 
@@ -238,18 +213,16 @@ pub fn handler<'info>(
         }
     } else if *nft_token_program_key == TOKEN_EXT_PID {
         let mut token22_ra = remaining_accounts.clone();
-        // Pass in RA for delegate as needed
-        ctx.accounts.token22_nft_delegate(data.size, token22_ra.clone())?;
         if *nft_program_key == WNS_PID {
             let group_member_account = remaining_accounts.get(4).unwrap();
-            let manager_account = remaining_accounts.get(6).unwrap();
             
             let (_, extra_remaining_accounts) = remaining_accounts.split_at(7);
             token22_ra = extra_remaining_accounts.to_vec();
             
             verify_wns_mint(ctx.accounts.nft_mint.to_account_info(),group_member_account.to_account_info(), ctx.accounts.market.market_identifier.clone())?;
-            ctx.accounts.wns_freeze(signer_seeds, manager_account.to_account_info(), token22_ra.clone())?;
         }
+        // Pass in RA for delegate as needed
+        ctx.accounts.token22_nft_delegate(data.size, token22_ra.clone())?;
     } else if *nft_token_program_key == BUBBLEGUM_PID {
         // Transfer compressed NFT
         // TODO

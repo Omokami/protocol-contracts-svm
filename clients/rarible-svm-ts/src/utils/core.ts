@@ -132,7 +132,7 @@ export const getRemainingAccountsForMint = async (provider: Provider, mint: stri
 		const extraMetaPda = getExtraMetasAccountPda(mint);
 		const approveAccount = getApproveAccountPda(mint);
 		const distributionAccount = getDistributionAccountPda(wnsParams.groupMint, wnsParams.paymentMint);
-		const managerAccount = getManagerAccountPda();
+		// const managerAccount = getManagerAccountPda();
 		const paymentTokenProgram = await getTokenProgramFromMint(provider, wnsParams.paymentMint);
 		const groupMemberAccount = getGroupMemberAccount(mint);
 		const distributionTokenAccount = paymentTokenProgram && getAtaAddress(wnsParams.paymentMint, distributionAccount.toString(), paymentTokenProgram.toString());
@@ -165,11 +165,6 @@ export const getRemainingAccountsForMint = async (provider: Provider, mint: stri
 			},
 			{
 				pubkey: new PublicKey(wnsParams.paymentMint),
-				isWritable: false,
-				isSigner: false,
-			},
-			{
-				pubkey: managerAccount,
 				isWritable: false,
 				isSigner: false,
 			},

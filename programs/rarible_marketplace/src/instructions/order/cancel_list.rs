@@ -3,11 +3,6 @@ use anchor_lang::{solana_program::sysvar, Key};
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token_interface::{revoke, Mint, Revoke, TokenAccount, TokenInterface};
 use mpl_token_metadata::accounts::Metadata;
-use wen_new_standard::{
-    cpi::{accounts::{ApproveTransfer, ThawDelegatedAccount}, approve_transfer, thaw_mint_account},
-    utils::get_mint_metadata,
-    ROYALTY_BASIS_POINTS_FIELD,
-};
 
 use crate::errors::MarketError;
 use crate::state::*;
@@ -90,31 +85,6 @@ impl<'info> CancelListing<'info> {
         );
         revoke(cpi_ctx.with_remaining_accounts(remaining_accounts))
     }
-
-    fn wns_thaw(
-        &self,
-        signer_seeds: &[&[&[u8]]],
-        manager_account: AccountInfo<'info>,
-        remaining_accounts: Vec<AccountInfo<'info>>,
-    ) -> Result<()> {
-        
-        let thaw_cpi = CpiContext::new_with_signer(
-            self.nft_program.to_account_info(),
-            ThawDelegatedAccount {
-                mint: self.nft_mint.to_account_info(),
-                user: self.initializer.to_account_info(),
-                delegate_authority: self.order.to_account_info(),
-                mint_token_account: self.initializer_nft_ta.to_account_info(),
-                manager: manager_account.to_account_info(),
-                token_program: self.nft_token_program.to_account_info(),
-            },
-            signer_seeds
-        );
-
-        thaw_mint_account(
-            thaw_cpi.with_remaining_accounts(remaining_accounts)
-        )
-    }
 }
 
 #[inline(always)]
@@ -145,16 +115,7 @@ pub fn handler<'info>(ctx: Context<'_, '_, '_, 'info, CancelListing<'info>>) -> 
             return Err(MarketError::UnsupportedNft.into());
         }
     } else if *nft_token_program_key == TOKEN_EXT_PID {
-        let mut token22_ra = remaining_accounts.clone();
-        // Any remaining accounts left are for potential transfer hook (Empty if not expecting hook)
-        if *nft_program_key == WNS_PID {
-            let manager_account = remaining_accounts.get(6).unwrap();
-            
-            let (_, extra_remaining_accounts) = remaining_accounts.split_at(7);
-            token22_ra = extra_remaining_accounts.to_vec();
-            
-            ctx.accounts.wns_thaw(signer_seeds, manager_account.to_account_info(), token22_ra.clone())?;
-        }
+        let token22_ra = remaining_accounts.clone();
         ctx.accounts
             .token22_nft_revoke(signer_seeds, token22_ra)?;
     } else if *nft_token_program_key == BUBBLEGUM_PID {
