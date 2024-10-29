@@ -1,0 +1,12 @@
+[package]
+name = "merkle-tree-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "merkle-tree-cli"
+path = "src/bin/cli.rs"
+
+[dependencies]
+clap = { workspace = true }
+merkle-tree = { workspace = true }

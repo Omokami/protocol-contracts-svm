@@ -7,3 +7,7 @@ test-ledger
 .yarn
 .env
 
+**/test_keys
+test/merkle_tree.json
+test/merkle_tree_test_csv.json
+

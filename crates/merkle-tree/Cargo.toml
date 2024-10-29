@@ -1,0 +1,22 @@
+[package]
+name = "merkle-tree"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+merkle-tree-verify = { workspace = true }
+csv = { workspace = true }
+fast-math = { workspace = true }
+indexmap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+hex = { workspace = true }
+rand = { workspace = true }
+thiserror = { workspace = true }
+
+solana-program = { workspace = true }
+solana-sdk = { workspace = true }
+
