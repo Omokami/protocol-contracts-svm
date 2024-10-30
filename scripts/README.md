@@ -1,9 +1,20 @@
-## Installation instructions
+# Rarible Contracts Testing Scripts
 
-0. `npm install` or `yarn install`
+## Overview
+Rarible Marketplace is structured as an orderbook. Each market is identified by a generic pubkey. Each NFT may be added to as many markets as it wants, each pairing of NFT-Market requires a verification account. The intended flow is each NFT collection for example would be verified for the same market.
 
-1. Run `npm run calculate` or `yarn calculate` to fetch the accounts either on devnet or mainnet (toggle boolean inside function argument at the end of function body).
+NFTs currently usable in the market contract are WNS, Generic Token Extensions NFTs, Metaplex NFTs and pNFTs.
 
-2. For STEP 1 (Resizing bump), run `npm run resize` or `yarn resize` to create an address look up table and then start resizing the accounts. The address lookup account will be printed over the terminal, hence copy it for the next step or the same step if errored out in the middle, thereby it wouldn't create another account. Address table look up is used to avoid the "Transaction too long" error by passing duplicate accounts (System program, distribution program, signer, WNS program).
+The Client directory contains useful functions for all relevant instructions and many data fetching functions.
 
-3. For STEP 2 (Updating bump), run `npm run update` or `yarn update` to either create the address table lookup account or feed it via the function arguments at the end. This will make sure bump value updates are happening in the same fashion as STEP 1.
+Users create Orders to bid or list. Orders are created within a market.
+
+Bidding can either be done on an individual NFT or market wide. This is set with the nft_mint struct on the Order.
+
+Listings are NFT specific.
+
+Both Listings and Bids require setting a payment mint. This must be an SPL token, using either the original token program or Token22. Native SOL is not supported, you will need to add wrap and unwrap instructions to use wrapped SOL.
+
+To run the script, set the URL and wallet to be used as signer using the ```ANCHOR_PROVIDER_URL``` and ```ANCHOR_WALLET``` environment variables. For example: ```export ANCHOR_PROVIDER_URL=https://api.devnet.solana.com``` and ```export ANCHOR_WALLET=~/.config/solana/id.json```
+
+You can update any of the variables at the top, but remember you will need to first set up a market, then verify mints you want to test with and use a payment mint that exists. 
