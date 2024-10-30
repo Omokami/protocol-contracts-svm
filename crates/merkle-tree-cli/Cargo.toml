@@ -8,5 +8,5 @@ name = "merkle-tree-cli"
 path = "src/bin/cli.rs"
 
 [dependencies]
-clap = { workspace = true }
-merkle-tree = { workspace = true }
+clap = { version = "3.2.25", features = ["derive", "env"] }
+merkle-tree = { version="*", path = "../merkle-tree" }
