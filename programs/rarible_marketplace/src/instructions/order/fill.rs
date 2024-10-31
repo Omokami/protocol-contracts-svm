@@ -431,7 +431,7 @@ pub fn handler<'info>(
         }
         // Any remaining accounts left are for potential transfer hook (Empty if not expecting hook)
         ctx.accounts
-            .token22_nft_transfer(signer_seeds, is_buy, order_size, token22_ra)?;
+            .token22_nft_transfer(signer_seeds, is_buy, amount, token22_ra)?;
     } else if *nft_token_program_key == BUBBLEGUM_PID {
         // Transfer compressed NFT
         // TODO
