@@ -14,7 +14,7 @@
   "license": "MIT",
   "main": "build/index.js",
   "files": [
-    "build"
+    "lib"
   ],
   "types": "./lib/types/index.d.ts",
   "exports": {
@@ -23,9 +23,9 @@
     "./lib/types/*": "./lib/types/*"
   },
   "scripts": {
-    "clean": "npx shx mkdir -p lib && npx shx rm -rf lib",
+    "clean": "mkdir -p lib && rm -rf lib",
     "package": "npx shx mkdir  -p lib/cjs lib/esm lib/types",
-    "build": "rm -rf ./build && tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json"
+    "build": "rm -rf ./lib && tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json"
   },
   "peerDependencies": {
   },

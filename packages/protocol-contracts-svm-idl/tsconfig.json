@@ -15,7 +15,7 @@
     "skipLibCheck": true,
     "noEmit": false,
     "allowSyntheticDefaultImports": true,
-    "outDir": "build"
+    "outDir": "lib"
   },
   "references": [
     {

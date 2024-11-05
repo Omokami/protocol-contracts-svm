@@ -23,12 +23,12 @@
     "./lib/types/*": "./lib/types/*"
   },
   "scripts": {
-    "clean": "npx shx mkdir -p lib && npx shx rm -rf lib",
+   "clean": "mkdir -p build &&  mkdir -p node_modules && rm -rf build && rm -rf node_modules",
     "package": "npx shx mkdir  -p lib/cjs lib/esm lib/types",
-    "build": "rm -rf ./build && tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json"
+    "build": "pwd"
   },
   "dependencies": {
-    "@rarible_int/rarible-idl": "0.1.0"
+    "@rarible_int/protocol-contracts-svm-idl": "0.1.0"
   },
   "publishConfig": {
     "registry": "http://nexus.rarible.int/repository/npm/"

@@ -5,7 +5,7 @@
       "target": "ES2016",
       "module": "CommonJS",
       "sourceMap": false,
-      "outDir": "build/cjs",
+      "outDir": "lib/cjs",
       "rootDir": "../../target",
       "composite": true,
       "resolveJsonModule": true,

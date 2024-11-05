@@ -5,7 +5,7 @@
     "extends": "./tsconfig.json",
     "compilerOptions": {
       "sourceMap": true,
-      "outDir": "./build/types",
+      "outDir": "./lib/types",
       "rootDir": "../../target",
       "composite": true,
       "resolveJsonModule": true,

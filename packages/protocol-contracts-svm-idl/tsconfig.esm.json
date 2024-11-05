@@ -3,8 +3,8 @@
     "include": ["../../target/types", "../../target/idl"],
     "compilerOptions": {
       "rootDir": "../../target",
-      "outDir": "build/esm",
-      "declarationDir": "build/types",
+      "outDir": "lib/esm",
+      "declarationDir": "lib/types",
       "target": "ESNext",
       "module": "ESNext",
       "sourceMap": false,
