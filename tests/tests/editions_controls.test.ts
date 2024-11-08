@@ -234,7 +234,7 @@ describe('Editions Controls Test Suite', () => {
             systemProgram: SystemProgram.programId,
             tokenProgram: TOKEN_2022_PROGRAM_ID,
             raribleEditionsProgram: editionsProgram.programId,
-            groupExtensionProgram: new PublicKey('5hx15GaPPqsYA61v6QpcGPpo125v7rfvEfZQ4dJErG5V'),
+            groupExtensionProgram: TOKEN_GROUP_EXTENSION_PROGRAM_ID,
           })
           .instruction();
 

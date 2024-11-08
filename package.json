@@ -21,6 +21,7 @@
 
     "rarible_editions:deploy:eclipse-dev2": "anchor deploy -p rarible_editions --provider.cluster https://staging-rpc.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
     "rarible_editions_controls:deploy:eclipse-dev2": "anchor build -p rarible_editions_controls && anchor deploy -p rarible_editions_controls --provider.cluster https://staging-rpc.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
+    "rarible_marketplace:deploy-dev:eclipse-tests-net": "anchor build -p rarible_marketplace && anchor deploy -p rarible_marketplace --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
 
     "rarible_editions:deploy:eclipse-testnet": "anchor build -p rarible_editions && anchor deploy -p rarible_editions --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
     "rarible_editions_controls:deploy:eclipse-testnet": "anchor build -p rarible_editions_controls && anchor deploy -p rarible_editions_controls --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json"

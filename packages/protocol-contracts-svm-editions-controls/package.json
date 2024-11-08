@@ -9,7 +9,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/rariblecom/minting-sdk.git"
+    "url": "https://github.com/rarible/protocol-contracts-svm.git"
   },
   "license": "MIT",
   "main": "build/index.js",
