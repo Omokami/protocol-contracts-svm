@@ -39,7 +39,7 @@ export function getRaribleEditionsProgram(
 }
 
 export const PROGRAM_ID_GROUP_EXTENSIONS = new PublicKey(
-  "5hx15GaPPqsYA61v6QpcGPpo125v7rfvEfZQ4dJErG5V"
+  "RariGDYwEF1jQA4kisHxBxiv1TDuBPVHNNoXFNYriFb"
 );
 
 export function getProgramInstanceEditionsControls(connection: Connection) {

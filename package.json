@@ -15,17 +15,26 @@
     "clients": "node ./kinobi.mjs",
     "version": "conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md",
     "prepare": "husky",
-    "rarible_editions:deploy-dev:solana-dev-net": "anchor build -p rarible_editions && anchor deploy -p rarible_editions --provider.cluster https://api.devnet.solana.com --provider.wallet ~/.config/solana/id.json",
-    "rarible_editions_controls:deploy-dev:solana-dev-net": "anchor build -p rarible_editions_controls && anchor deploy -p rarible_editions_controls --provider.cluster https://api.devnet.solana.com --provider.wallet ~/.config/solana/id.json",
-    "rarible_marketplace:deploy-dev:solana-dev-net": "anchor build -p rarible_marketplace && anchor deploy -p rarible_marketplace --provider.cluster https://api.devnet.solana.com --provider.wallet ~/.config/solana/id.json",
 
-    "rarible_editions:deploy:eclipse-dev2": "anchor deploy -p rarible_editions --provider.cluster https://staging-rpc.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
-    "rarible_editions_controls:deploy:eclipse-dev2": "anchor build -p rarible_editions_controls && anchor deploy -p rarible_editions_controls --provider.cluster https://staging-rpc.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
-    "rarible_marketplace:deploy-dev:eclipse-tests-net": "anchor build -p rarible_marketplace && anchor deploy -p rarible_marketplace --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
+    "rarible_group:deploy:solana-dev-net": " solana program deploy ./bins/spl_token_group_example.so --program-id target/deploy/spl_token_group_example-keypair.json --url https://api.devnet.solana.com",
+    "rarible_editions:deploy:solana-dev-net": "anchor build -p rarible_editions && anchor deploy -p rarible_editions --provider.cluster https://api.devnet.solana.com --provider.wallet ~/.config/solana/id.json",
+    "rarible_editions_controls:deploy:solana-dev-net": "anchor build -p rarible_editions_controls && anchor deploy -p rarible_editions_controls --provider.cluster https://api.devnet.solana.com --provider.wallet ~/.config/solana/id.json",
+    "rarible_marketplace:deploy:solana-dev-net": "anchor build -p rarible_marketplace && anchor deploy -p rarible_marketplace --provider.cluster https://api.devnet.solana.com --provider.wallet ~/.config/solana/id.json",
 
-    "rarible_editions:deploy:eclipse-testnet": "anchor build -p rarible_editions && anchor deploy -p rarible_editions --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
-    "rarible_editions_controls:deploy:eclipse-testnet": "anchor build -p rarible_editions_controls && anchor deploy -p rarible_editions_controls --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json"
-    
+    "rarible_group:deploy-dev:eclipse-dev-net": "solana program deploy ./bins/spl_token_group_example.so --program-id target/deploy/spl_token_group_example-keypair.json --url https://staging-rpc.dev2.eclipsenetwork.xyz",
+    "rarible_editions:deploy:eclipse-dev-net": "anchor deploy -p rarible_editions --provider.cluster https://staging-rpc.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
+    "rarible_editions_controls:deploy:eclipse-dev-net": "anchor build -p rarible_editions_controls && anchor deploy -p rarible_editions_controls --provider.cluster https://staging-rpc.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
+    "rarible_marketplace:deploy:eclipse-dev-net": "anchor build -p rarible_marketplace && anchor deploy -p rarible_marketplace --provider.cluster https://staging-rpc.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
+
+    "rarible_group:deploy:eclipse-test-net": "solana program deploy ./bins/spl_token_group_example.so --program-id target/deploy/spl_token_group_example-keypair.json --url https://testnet.dev2.eclipsenetwork.xyz",
+    "rarible_editions:deploy:eclipse-test-net": "anchor build -p rarible_editions && anchor deploy -p rarible_editions --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
+    "rarible_editions_controls:deploy:eclipse-test-net": "anchor build -p rarible_editions_controls && anchor deploy -p rarible_editions_controls --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
+    "rarible_marketplace:deploy:eclipse-test-net": "anchor build -p rarible_marketplace && anchor deploy -p rarible_marketplace --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
+
+    "rarible_group:deploy:eclipse-main-net": "solana program deploy ./bins/spl_token_group_example.so --program-id target/deploy/spl_token_group_example-keypair.json --url https://mainnetbeta-rpc.eclipse.xyz",
+    "rarible_editions:deploy:eclipse-main-net": "anchor build -p rarible_editions && anchor deploy -p rarible_editions --provider.cluster https://mainnetbeta-rpc.eclipse.xyz --provider.wallet ~/.config/solana/id.json",
+    "rarible_editions_controls:deploy:eclipse-main-net": "anchor build -p rarible_editions_controls && anchor deploy -p rarible_editions_controls --provider.cluster https://mainnetbeta-rpc.eclipse.xyz --provider.wallet ~/.config/solana/id.json",
+    "rarible_marketplace:deploy:eclipse-main-net": "anchor build -p rarible_marketplace && anchor deploy -p rarible_marketplace --provider.cluster https://mainnetbeta-rpc.eclipse.xyz --provider.wallet ~/.config/solana/id.json"
   },
   "repository": {
     "type": "git",
