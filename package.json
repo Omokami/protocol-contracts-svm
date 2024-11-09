@@ -49,12 +49,15 @@
     "@kinobi-so/visitors": "^0.20.6",
     "@kinobi-so/visitors-core": "^0.20.6",
     "@solana/spl-token": "^0.4.6",
-    "@solana/spl-token-metadata": "^0.1.4"
+    "@solana/spl-token-metadata": "^0.1.4",
+    "dotenv": "^16.4.5",
+    "recursive-fs": "^2.1.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.3.0",
-    "@commitlint/config-conventional": "^19.2.2",
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
     "@faker-js/faker": "^8.4.1",
+    "@filebase/sdk": "^1.0.6",
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.3.0",
     "@types/mocha": "^9.0.0",
@@ -62,13 +65,14 @@
     "anchor-bankrun": "^0.3.0",
     "chai": "^4.3.4",
     "conventional-changelog-cli": "^5.0.0",
+    "csv-writer": "^1.6.0",
     "husky": "^9.0.11",
+    "lerna": "^6.0.3",
     "mocha": "^9.0.3",
     "prettier": "^2.6.2",
     "solana-bankrun": "^0.3.0",
     "ts-mocha": "^10.0.0",
-    "typescript": "^4.3.5",
-    "lerna": "^6.0.3"
+    "typescript": "^4.3.5"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

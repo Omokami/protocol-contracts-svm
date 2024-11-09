@@ -12,3 +12,8 @@ test/merkle_tree.json
 test/merkle_tree_test_csv.json
 
 build
+*.csv
+merkle_tree.json
+proofs/
+data/
+data/**/*

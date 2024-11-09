@@ -2468,6 +2468,8 @@ dependencies = [
 name = "merkle-tree-verify"
 version = "0.1.0"
 dependencies = [
+ "anchor-lang",
+ "anchor-spl",
  "solana-program",
 ]
 
@@ -3320,15 +3322,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rarible-merkle-verify"
-version = "0.0.1"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "solana-program",
-]
-
-[[package]]
 name = "rarible_editions"
 version = "0.2.1"
 dependencies = [
@@ -3359,7 +3352,7 @@ dependencies = [
  "anchor-spl",
  "arrayref",
  "libreplex_shared",
- "rarible-merkle-verify",
+ "merkle-tree-verify",
  "rarible_editions",
  "solana-program",
  "solana-program-test",

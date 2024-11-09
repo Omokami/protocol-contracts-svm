@@ -8,7 +8,7 @@ This CLI tool allows you to create a Merkle tree from a CSV file of recipients.
 
 ## Usage
 
-1. Navigate to the `merkle-tree-cli` directory:
+1. First, move into the `merkle-tree-cli` folder:
 
    ```bash
    cd crates/merkle-tree-cli

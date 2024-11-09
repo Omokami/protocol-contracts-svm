@@ -3,7 +3,7 @@ use anchor_lang::{
     prelude::*,
     solana_program::hash::hashv,
 };
-use rarible_merkle_verify::verify;
+use merkle_tree_verify::verify;
 use crate::{
     MinterStats, Phase,
     errors::{EditionsControlsError},
