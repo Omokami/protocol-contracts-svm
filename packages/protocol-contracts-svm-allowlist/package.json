@@ -1,6 +1,5 @@
 {
   "name": "@rarible_int/protocol-contracts-svm-allowlist",
-  "type": "module",
   "version": "0.1.0",
   "keywords": [
     "rarible",

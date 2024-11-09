@@ -1,12 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
-import { fileURLToPath } from 'url';
 import { createObjectCsvWriter } from "csv-writer";
 import { parse } from "csv-parse/sync";
 
-// Get the equivalent of __dirname for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// You can use __dirname directly in CommonJS modules
 
 export interface RawEntry {
   tx_hash: string;
@@ -64,7 +61,7 @@ export async function writeToCSVWithErrorCode(filePath: string, entries: Rejecte
     ],
   });
 
-  const records = entries.map(entry => ({
+  const records = entries.map((entry) => ({
     address: entry.address,
     price: 0,
     max_claims: entry.quantity,
@@ -89,7 +86,7 @@ export async function writeToCSV(filePath: string, entries: CsvEntry[]) {
     ],
   });
 
-  const records = entries.map(entry => ({
+  const records = entries.map((entry) => ({
     address: entry.address,
     price: 0,
     max_claims: entry.quantity,
@@ -102,12 +99,12 @@ export async function writeToCSV(filePath: string, entries: CsvEntry[]) {
 export function deduplicateEntries(entries: CsvEntry[]): CsvEntry[] {
   const merged = new Map<string, number>();
 
-  entries.forEach(entry => {
+  entries.forEach((entry) => {
     const currentQuantity = merged.get(entry.address) || 0;
     merged.set(entry.address, currentQuantity + parseInt(entry.quantity));
   });
 
-  return Array.from(merged).map(([address, quantity]) => ({
+  return Array.from(merged.entries()).map(([address, quantity]) => ({
     address,
     quantity: quantity.toString(),
   }));
@@ -115,7 +112,7 @@ export function deduplicateEntries(entries: CsvEntry[]): CsvEntry[] {
 
 export function readRawFromCSV(filePath: string): RawEntry[] {
   const dataDir = path.join(__dirname, "../data");
-  const csv = fs.readFileSync(path.join(dataDir, filePath), "utf8");
-  const entries = parse(csv, { columns: true });
+  const csvContent = fs.readFileSync(path.join(dataDir, filePath), "utf8");
+  const entries = parse(csvContent, { columns: true });
   return entries as RawEntry[];
 }
