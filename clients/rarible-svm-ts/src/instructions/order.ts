@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {type Provider, BN} from '@coral-xyz/anchor';
-import {ASSOCIATED_TOKEN_PROGRAM_ID} from '@solana/spl-token';
+import {ASSOCIATED_TOKEN_PROGRAM_ID, createWrappedNativeAccount} from '@solana/spl-token';
 import {
 	SYSVAR_INSTRUCTIONS_PUBKEY, SystemProgram, PublicKey,
 	Keypair,

@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked}};
 
 
-use crate::state::*;
+use crate::{state::*, utils::{create_ata, invoke_unwrap_sol, invoke_wrap_sol, UnwrapSolAccounts, WrapSolAccounts, WSOL_MINT}};
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct BidData {
@@ -36,13 +36,9 @@ pub struct BidNft<'info> {
         space = 8 + std::mem::size_of::<Order>()
     )]
     pub order: Box<Account<'info, Order>>,
-    #[account(
-        mut,
-        associated_token::mint = payment_mint,
-        associated_token::authority = initializer,
-        associated_token::token_program = payment_token_program,
-    )]
-    pub initializer_payment_ta: Box<InterfaceAccount<'info, TokenAccount>>,
+    /// CHECK: create_ata function check
+    #[account(mut)]
+    pub initializer_payment_ta: UncheckedAccount<'info>,
     #[account(
         init_if_needed,
         payer = initializer,
@@ -73,6 +69,35 @@ impl<'info> BidNft<'info> {
         );
         transfer_checked(cpi_ctx, amount, self.payment_mint.decimals)
     }
+
+    #[inline(never)]
+    fn wrap_sol_if_needed(&self, amount: u64) -> Result<()> {
+        if self.payment_mint.key() == WSOL_MINT {
+            invoke_wrap_sol(
+                &WrapSolAccounts {
+                    user: self.initializer.to_account_info(),
+                    user_ta: self.initializer_payment_ta.to_account_info(),
+                    token_program: self.payment_token_program.to_account_info(),
+                    wsol_mint: self.payment_mint.to_account_info(),
+                    system_program: self.system_program.to_account_info(),
+                },
+                amount,
+            )?;
+        }
+        Ok(())
+    }
+
+    #[inline(never)]
+    fn unwrap_sol_if_needed(&self) -> Result<()> {
+        if self.payment_mint.key() == WSOL_MINT {
+            invoke_unwrap_sol(&UnwrapSolAccounts {
+                user: self.initializer.to_account_info(),
+                user_ta: self.initializer_payment_ta.to_account_info(),
+                token_program: self.payment_token_program.to_account_info(),
+            })?;
+        }
+        Ok(())
+    }
 }
 
 #[inline(always)]
@@ -81,6 +106,17 @@ pub fn handler(ctx: Context<BidNft>, data: BidData) -> Result<()> {
 
     let clock = Clock::get()?;
     let bid_value = data.size.checked_mul(data.price).unwrap();
+
+    create_ata(
+        &ctx.accounts.initializer_payment_ta.to_account_info(),
+        &ctx.accounts.initializer.to_account_info(),
+        &ctx.accounts.payment_mint.to_account_info(),
+        &ctx.accounts.initializer.to_account_info(),
+        &ctx.accounts.system_program.to_account_info(),
+        &ctx.accounts.payment_token_program.to_account_info(),
+    )?;
+
+    ctx.accounts.wrap_sol_if_needed(bid_value)?;
 
     // Transfer bid funds TODO;
     ctx.accounts.transfer_payment(bid_value)?;
@@ -106,6 +142,8 @@ pub fn handler(ctx: Context<BidNft>, data: BidData) -> Result<()> {
         ctx.accounts.market.market_identifier,
         OrderEditType::Init,
     ));
+
+    ctx.accounts.unwrap_sol_if_needed()?;
 
     Ok(())
 }

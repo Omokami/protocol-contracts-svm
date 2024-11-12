@@ -1,12 +1,10 @@
 use anchor_lang::{
-    prelude::{AccountInfo, Pubkey, Result},
-    require,
-    solana_program::{
+    prelude::{msg, AccountInfo, Pubkey, Result}, pubkey, require, solana_program::{
         program::{invoke, invoke_signed},
         system_instruction::transfer,
-    },
-    ToAccountInfo,
+    }, ToAccountInfo
 };
+use anchor_spl::token::spl_token;
 use anchor_spl::associated_token::{get_associated_token_address, spl_associated_token_account};
 use mpl_token_metadata::accounts::Metadata;
 use mpl_token_metadata::types::{AuthorizationData, TokenStandard};
@@ -335,4 +333,90 @@ pub fn create_ata<'info>(
     )?;
 
     Ok(())
+}
+
+pub struct WrapSolAccounts<'info> {
+    pub user: AccountInfo<'info>,
+    pub user_ta: AccountInfo<'info>,
+    pub system_program: AccountInfo<'info>,
+    pub token_program: AccountInfo<'info>,
+    pub wsol_mint: AccountInfo<'info>,
+}
+
+pub struct UnwrapSolAccounts<'info> {
+    pub user: AccountInfo<'info>,
+    pub user_ta: AccountInfo<'info>,
+    pub token_program: AccountInfo<'info>,
+}
+
+pub const WSOL_MINT: Pubkey = pubkey!("So11111111111111111111111111111111111111112");
+
+#[inline(never)]
+pub fn invoke_wrap_sol(accounts: &WrapSolAccounts, amount: u64) -> Result<()> {
+    // Create ATA if it doesn't exist
+
+    create_ata(
+        &accounts.user_ta.to_account_info(),
+        &accounts.user.to_account_info(),
+        &accounts.wsol_mint,
+        &accounts.user.to_account_info(),
+        &accounts.system_program,
+        &accounts.token_program,
+    )?;
+
+    // Transfer SOL to the ATA
+    let ix = transfer(&accounts.user.key, &accounts.user_ta.key, amount);
+
+    invoke(
+        &ix,
+        &[
+            accounts.user.to_account_info(),
+            accounts.user_ta.to_account_info(),
+            accounts.system_program.to_account_info(),
+        ],
+    )?;
+
+    // Sync the ATA balance
+    let ix = spl_token::instruction::sync_native(&spl_token::ID, &accounts.user_ta.key)?;
+    invoke(
+        &ix,
+        &[
+            accounts.user_ta.to_account_info(),
+            accounts.token_program.to_account_info(),
+        ],
+    )?;
+
+    Ok(())
+}
+
+#[inline(never)]
+pub fn invoke_unwrap_sol(accounts: &UnwrapSolAccounts) -> Result<()> {
+    match spl_token::instruction::close_account(
+        &spl_token::ID,
+        &accounts.user_ta.key,
+        &accounts.user.key,
+        &accounts.user.key,
+        &[],
+    ) {
+        Ok(ix) => {
+            match invoke(
+                &ix,
+                &[
+                    accounts.user_ta.to_account_info(),
+                    accounts.user.to_account_info(),
+                    accounts.token_program.to_account_info(),
+                ],
+            ) {
+                Ok(_) => Ok(()),
+                Err(e) => {
+                    msg!("Error closing wsol account: {:?}", e);
+                    Err(e.into())
+                }
+            }
+        },
+        Err(e) => {
+            msg!("Error creating close account instruction: {:?}", e);
+            Err(e.into())
+        }
+    }
 }

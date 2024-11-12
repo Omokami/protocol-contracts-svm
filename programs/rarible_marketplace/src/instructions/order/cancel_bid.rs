@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked}};
 
-use crate::{state::*, utils::get_bump_in_seed_form};
+use crate::{state::*, utils::{create_ata, get_bump_in_seed_form, invoke_unwrap_sol, UnwrapSolAccounts, WSOL_MINT}};
 
 #[derive(Accounts)]
 #[instruction()]
@@ -28,16 +28,11 @@ pub struct CancelBid<'info> {
         bump,
     )]
     pub market: Box<Account<'info, Market>>,
+    /// CHECK: create_ata function check
+    #[account(mut)]
+    pub initializer_payment_ta: UncheckedAccount<'info>,
     #[account(
         mut,
-        associated_token::mint = payment_mint,
-        associated_token::authority = initializer,
-        associated_token::token_program = payment_token_program,
-    )]
-    pub initializer_payment_ta: Box<InterfaceAccount<'info, TokenAccount>>,
-    #[account(
-        init_if_needed,
-        payer = initializer,
         associated_token::mint = payment_mint,
         associated_token::authority = order,
         associated_token::token_program = payment_token_program,
@@ -65,6 +60,18 @@ impl<'info> CancelBid<'info> {
         );
         transfer_checked(cpi_ctx, amount, self.payment_mint.decimals)
     }
+
+    #[inline(never)]
+    fn unwrap_sol_if_needed(&self) -> Result<()> {
+        if self.payment_mint.key() == WSOL_MINT {
+            invoke_unwrap_sol(&UnwrapSolAccounts {
+                user: self.initializer.to_account_info(),
+                user_ta: self.initializer_payment_ta.to_account_info(),
+                token_program: self.payment_token_program.to_account_info(),
+            })?;
+        }
+        Ok(())
+    }
 }
 
 #[inline(always)]
@@ -72,6 +79,15 @@ pub fn handler(ctx: Context<CancelBid>) -> Result<()> {
     msg!("Close buy order account: {}", ctx.accounts.order.key());
     ctx.accounts.order.state = OrderState::Closed.into();
     let bump = &get_bump_in_seed_form(&ctx.bumps.order);
+
+    create_ata(
+        &ctx.accounts.initializer_payment_ta.to_account_info(),
+        &ctx.accounts.initializer.to_account_info(),
+        &ctx.accounts.payment_mint.to_account_info(),
+        &ctx.accounts.initializer.to_account_info(),
+        &ctx.accounts.system_program.to_account_info(),
+        &ctx.accounts.payment_token_program.to_account_info(),
+    )?;
 
     let signer_seeds: &[&[&[u8]]; 1] = &[&[ORDER_SEED, ctx.accounts.order.nonce.as_ref(), ctx.accounts.order.market.as_ref(), ctx.accounts.order.owner.as_ref(), bump][..]];
 
@@ -84,5 +100,7 @@ pub fn handler(ctx: Context<CancelBid>) -> Result<()> {
         ctx.accounts.market.market_identifier,
         OrderEditType::Close,
     ));
+
+    ctx.accounts.unwrap_sol_if_needed()?;
     Ok(())
 }

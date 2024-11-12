@@ -20,8 +20,7 @@ use crate::{
     errors::MarketError,
     state::*,
     utils::{
-        create_ata, get_amount_from_bp, get_bump_in_seed_form, get_fee_amount,
-        token_extensions::WnsApprovalAccounts, verify_wns_mint,
+        create_ata, get_amount_from_bp, get_bump_in_seed_form, get_fee_amount, invoke_unwrap_sol, invoke_wrap_sol, token_extensions::WnsApprovalAccounts, verify_wns_mint, UnwrapSolAccounts, WrapSolAccounts, WSOL_MINT
     },
 };
 
@@ -265,6 +264,39 @@ impl<'info> FillOrder<'info> {
         transfer_checked(cpi_ctx, amount, self.payment_mint.decimals)
     }
 
+    #[inline(never)]
+    fn wrap_sol_if_needed(&self, amount: u64, is_buy: bool) -> Result<()> {
+        if self.payment_mint.key() == WSOL_MINT && !is_buy {
+            invoke_wrap_sol(
+                &WrapSolAccounts {
+                    user: self.taker.to_account_info(),
+                    user_ta: self.buyer_payment_ta.to_account_info(),
+                    token_program: self.payment_token_program.to_account_info(),
+                    wsol_mint: self.payment_mint.to_account_info(),
+                    system_program: self.system_program.to_account_info(),
+                },
+                amount,
+            )?;
+        }
+        Ok(())
+    }
+
+    #[inline(never)]
+    fn unwrap_sol_if_needed(&self, is_buy: bool) -> Result<()> {
+        if self.payment_mint.key() == WSOL_MINT {
+            let user_ta = if is_buy {
+                self.seller_payment_ta.to_account_info()
+            } else {
+                self.buyer_payment_ta.to_account_info()
+            };
+            invoke_unwrap_sol(&UnwrapSolAccounts {
+                user: self.taker.to_account_info(),
+                user_ta,
+                token_program: self.payment_token_program.to_account_info(),
+            })?;
+        }
+        Ok(())
+    }
 }
 
 /// Initializer is the buyer and is buying an nft from the seller
@@ -377,6 +409,8 @@ pub fn handler<'info>(
         &payment_token_program,
     )?;
 
+    ctx.accounts.wrap_sol_if_needed(buy_value, is_buy)?;
+
     // Transfer NFT
     if *nft_token_program_key == TOKEN_PID {
         // Check if its metaplex or not
@@ -446,6 +480,8 @@ pub fn handler<'info>(
         .transfer_payment(signer_seeds, is_buy, seller_received_amount)?;
     ctx.accounts
         .transfer_fee(signer_seeds, is_buy, fee_amount)?;
+
+    ctx.accounts.unwrap_sol_if_needed(is_buy)?;
 
     // close order account
     let size = ctx.accounts.order.size;

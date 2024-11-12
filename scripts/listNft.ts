@@ -4,7 +4,7 @@ import { CreateOrderArgs, getCancelBid, fetchOrdersByMarket, fetchOrdersByMint, 
 const demoMarket = {
     marketIdentifier: new PublicKey("5hHaru7wRzFzHs9Fm7DK2vCXEC6v8zN9xutXYLHpEqG"),
     wnsGroupMint: "EXJB8YFiBpFeBbjq9PZhCsav2RfcZVeuBvT9t3jBuY5f",
-    paymentMint: "GRhhJGyjkHYcVmvKTb8okbPZD6HMYZrAcWpyN4R3bK5n",
+    paymentMint: "So11111111111111111111111111111111111111112",
     feeRecipient: "yaoYaopKcDsMxnjbT1jBdvYz6XRmjPdAPHczsCraERc",
     feeBps: 250
 };
@@ -36,7 +36,7 @@ const biddingData = [
 }
 ];
 
-const nftToSell = "42fqoiapjAMdqhF2i9PHR8Lk8UeJ9UU9yYn52uDtg6CT";
+const nftToSell = "CchC7gtAUL1bDbuomRkjupySAZcMAygRb983r3qnkXFv";
 
 async function setupMarket() {
     const provider = getProvider();
@@ -105,7 +105,7 @@ async function listNfts() {
         const signedTx = await provider.wallet.signTransaction(tx);
 
         try{
-            const txSig = await provider.connection.sendTransaction(signedTx);
+            const txSig = await provider.connection.sendTransaction(signedTx, { skipPreflight: true });
             console.log("List --", txSig);
         } catch (e) {
             console.log(e);
@@ -156,7 +156,7 @@ async function sellNft() {
         paymentMint
     };
 
-    const activeOrders = (await fetchOrdersByMarket(provider, marketAddress.toString())).filter((o) => o.account.state == 0).filter(o => o !== undefined);
+    const activeOrders = (await fetchOrdersByMarket(provider, marketAddress.toString())).filter((o) => o.account.state == 0).filter(o => o !== undefined).filter((o) => o.account.paymentMint.toString() === paymentMint).filter((o) => o.account.owner.toString() !== provider.wallet.publicKey.toString());
     const topBid = activeOrders.filter(o => o.account.side == 0 && o.publicKey.toString() !== "U8b7wU4hbUGFkUXioFzdfLz9YDFzDdD7VPrCV3VGcEq").sort((a, b) => a.account.price.toNumber() - b.account.price.toNumber()).pop();
 
     // console.log(topBid.account.price.toNumber());
@@ -171,7 +171,7 @@ async function sellNft() {
     
         try{
             const txSig = await provider.connection.sendTransaction(signedTx);
-            console.log("Buy --", txSig);
+            console.log("Sell --", txSig);
         } catch (e) {
             console.log(e);
         }
@@ -206,7 +206,7 @@ async function buyNft() {
         const signedTx = await provider.wallet.signTransaction(tx);
     
         try{
-            const txSig = await provider.connection.sendTransaction(signedTx);
+            const txSig = await provider.connection.sendTransaction(signedTx, { skipPreflight: true });
             console.log("Buy --", txSig);
         } catch (e) {
             console.log(e);
@@ -272,7 +272,7 @@ async function cancelBids() {
 // verifyMints();
 // listNfts();
 // bid();
-// sellNft();
+sellNft();
 // buyNft();
 // cancelListings();
 // cancelBids();
