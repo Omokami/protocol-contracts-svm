@@ -88,7 +88,7 @@ export async function writeToCSV(filePath: string, entries: CsvEntry[]) {
 
   const records = entries.map((entry) => ({
     address: entry.address,
-    price: 0,
+    price: 300000,
     max_claims: entry.quantity,
   }));
 

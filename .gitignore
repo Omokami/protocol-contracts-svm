@@ -17,3 +17,6 @@ merkle_tree.json
 proofs/
 data/
 data/**/*
+backup-keys
+metadata
+cat-meta

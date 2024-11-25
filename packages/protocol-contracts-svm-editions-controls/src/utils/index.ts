@@ -1,7 +1,9 @@
-import { PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { PROGRAM_ID_EDITIONS } from "@rarible_int/protocol-contracts-svm-core"
 import { PROGRAM_ID_EDITIONS_CONTROLS } from "@rarible_int/protocol-contracts-svm-core"
 import { toBufferLE } from "bigint-buffer";
+import path from "path";
+import fs from "fs";
 
 
 export const getHashlistPda = (deployment: PublicKey) => {
@@ -54,3 +56,20 @@ export const getBase64FromDatabytes = (dataBytes: Buffer, dataType: string) => {
   return `data:${dataType};base64,${base}`;
 };
 
+// Load or generate group and groupMint keypairs
+export function loadOrCreateKeypair(fileName: string, deployDirectory: string): Keypair {
+  const filePath = path.join(deployDirectory, fileName);
+  if (fs.existsSync(filePath)) {
+    const secretKeyString = fs.readFileSync(filePath, 'utf-8');
+    const secretKey = Uint8Array.from(JSON.parse(secretKeyString));
+    return Keypair.fromSecretKey(secretKey);
+  } else {
+    const keypair = Keypair.generate();
+    // Ensure the directory exists
+    if (!fs.existsSync(deployDirectory)) {
+      fs.mkdirSync(deployDirectory, { recursive: true });
+    }
+    fs.writeFileSync(filePath, JSON.stringify(Array.from(keypair.secretKey)));
+    return keypair;
+  }
+}

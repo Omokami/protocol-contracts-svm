@@ -10,7 +10,7 @@ import BN from "bn.js";
 
 import { TOKEN_2022_PROGRAM_ID } from "spl-token-4";
 import { getProgramInstanceEditions } from "@rarible_int/protocol-contracts-svm-core";
-import { getEditionsPda } from "../utils";
+import { getEditionsPda, loadOrCreateKeypair } from "../utils";
 import {IExecutorParams} from "@rarible_int/protocol-contracts-svm-core";
 import { sendSignedTransaction } from "@rarible_int/protocol-contracts-svm-core";
 import { getHashlistPda } from  "../utils";
@@ -45,8 +45,8 @@ export const createDeployment = async ({
   const editions = getEditionsPda(symbol);
   const editionsControls = getEditionsControlsPda(editions);
 
-  const groupMint = Keypair.generate();
-  const group = Keypair.generate();
+  const groupMint = loadOrCreateKeypair(`group-mint-${symbol}.json`, "target/deploy");
+  const group = loadOrCreateKeypair(`group-${symbol}.json`, "target/deploy");
   console.log({ groupMint: groupMint.publicKey.toBase58() });
 
   const hashlist = getHashlistPda(editions)[0];

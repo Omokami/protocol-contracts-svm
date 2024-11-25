@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { ethers, JsonRpcProvider } from "ethers";
 import dotenv from "dotenv";
 import { RawEntry, CsvEntry, RejectedEntry } from "./utils";
 import { PublicKey } from "@solana/web3.js";
@@ -27,14 +27,17 @@ export async function verifyBurnTransaction(
 
   // Fetch the transaction
   const tx = await provider.getTransaction(txHash);
+  if (!tx) {
+    throw new Error(`Transaction not found for hash: ${txHash}`);
+  }
 
   // Check if the transaction is to the expected contract
-  if (tx.to.toLowerCase() !== expectedContract.toLowerCase()) {
+  if (tx.to && tx.to.toLowerCase() !== expectedContract.toLowerCase()) {
     throw new Error("!ContractAddressMatch");
   }
 
   // Lastly, verify that the address is valid.
-  // should be a valid Solana address
+  // Should be a valid Solana address
   try {
     const isValidSolanaAddress = PublicKey.isOnCurve(address);
     if (!isValidSolanaAddress) {
@@ -50,9 +53,10 @@ export async function verifyBurnTransaction(
 export async function verifyTransactionBatch(
   rawEntries: RawEntry[],
   CONTRACT_ADDRESS: string,
-  batchSize: number = 1000
-) {
-  const provider = new ethers.InfuraProvider(process.env.NETWORK, process.env.INFURA_PROJECT_ID);
+  batchSize: number = 10
+): Promise<{ verifiedBurners: CsvEntry[]; rejectedBurners: RejectedEntry[] }> {
+  batchSize = 100;
+  const provider = new JsonRpcProvider("https://ethereum-rpc.publicnode.com");
 
   const verifiedBurners: CsvEntry[] = [];
   const rejectedBurners: RejectedEntry[] = [];
@@ -61,34 +65,51 @@ export async function verifyTransactionBatch(
   for (let i = 0; i < rawEntries.length; i += batchSize) {
     const batch = rawEntries.slice(i, i + batchSize);
     console.log(
-      `Processing batch ${i / batchSize + 1} of ${Math.ceil(rawEntries.length / batchSize)}`
+      `Processing batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(rawEntries.length / batchSize)}`
     );
 
+    // Map the batch entries to verification promises
     const verificationPromises = batch.map(async entry => {
-      try {
-        const isVerified = await verifyBurnTransaction(
-          provider,
-          entry.tx_hash,
-          entry.signer,
-          CONTRACT_ADDRESS,
-          entry.message,
-          entry.signature,
-          entry.address
-        );
-        if (isVerified) {
-          verifiedBurners.push({ address: entry.address, quantity: entry.quantity });
+      // Implement retry logic here
+      const maxRetries = 3;
+      let attempt = 0;
+
+      while (attempt < maxRetries) {
+        try {
+          attempt++;
+          const isVerified = await verifyBurnTransaction(
+            provider,
+            entry.tx_hash,
+            entry.signer,
+            CONTRACT_ADDRESS,
+            entry.message,
+            entry.signature,
+            entry.address
+          );
+
+          if (isVerified) {
+            verifiedBurners.push({ address: entry.address, quantity: entry.quantity });
+          }
+          return; // Verification succeeded, exit the loop
+        } catch (error) {
+          console.error(`Error on attempt ${attempt} for tx_hash ${entry.tx_hash}: ${error.message}`);
+
+          // If it's the last attempt, push to rejected burners
+          if (attempt === maxRetries) {
+            rejectedBurners.push({
+              address: entry.address,
+              quantity: entry.quantity,
+              rejectionReason: error.message,
+            });
+          }
+          // If not the last attempt, we wait and then retry
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
-      } catch (error) {
-        rejectedBurners.push({
-          address: entry.address,
-          quantity: entry.quantity,
-          rejectionReason: error.message,
-        });
       }
     });
 
     await Promise.all(verificationPromises);
-    console.log(`Completed batch ${i / batchSize + 1}\n`);
+    console.log(`Completed batch ${Math.floor(i / batchSize) + 1}\n`);
   }
 
   return { verifiedBurners, rejectedBurners };

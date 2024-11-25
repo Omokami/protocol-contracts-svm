@@ -25,7 +25,6 @@ anchor-spl = {version = "~0.30"}
 
 solana-program = {version = "1.17.13"}
 arrayref = "0.3.7"
-libreplex_shared = {version= "0.3.0", features=["no-entrypoint"] }
 spl-token-2022 = {version = "~3.0", features = ["no-entrypoint"]}
 spl-token-metadata-interface = {version= "~0.3"}
 spl-token-group-interface = {version= "0.2.3"}

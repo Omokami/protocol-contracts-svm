@@ -18,6 +18,11 @@
 
     "rarible_group:deploy:solana-dev-net": " solana program deploy ./bins/spl_token_group_example.so --program-id target/deploy/spl_token_group_example-keypair.json --url https://api.devnet.solana.com",
     "rarible_editions:deploy:solana-dev-net": "anchor build -p rarible_editions && anchor deploy -p rarible_editions --provider.cluster https://api.devnet.solana.com --provider.wallet ~/.config/solana/id.json",
+    "extend": "solana program extend 3H7a6aiAy28qbCzUro4SNobVManBVwmFe8b36FF3SBuc 1028896",
+    "extend2": "solana program extend RariUNM3vz1rwxPg8UJyRAN7rSKXxgd2ncS2ddCa4ZE 1005440",
+    
+    "double-size": "echo $(( $(stat -f%z target/deploy/rarible_editions.so) * 2 ))",
+    "rarible_editions:upgrade:solana-dev-net": "anchor upgrade target/deploy/rarible_editions.so --program-id 3H7a6aiAy28qbCzUro4SNobVManBVwmFe8b36FF3SBuc --provider.cluster https://api.devnet.solana.com --provider.wallet ~/.config/solana/id.json",
     "rarible_editions_controls:deploy:solana-dev-net": "anchor build -p rarible_editions_controls && anchor deploy -p rarible_editions_controls --provider.cluster https://api.devnet.solana.com --provider.wallet ~/.config/solana/id.json",
     "rarible_marketplace:deploy:solana-dev-net": "anchor build -p rarible_marketplace && anchor deploy -p rarible_marketplace --provider.cluster https://api.devnet.solana.com --provider.wallet ~/.config/solana/id.json",
 
@@ -28,13 +33,25 @@
 
     "rarible_group:deploy:eclipse-test-net": "solana program deploy ./bins/spl_token_group_example.so --program-id target/deploy/spl_token_group_example-keypair.json --url https://testnet.dev2.eclipsenetwork.xyz",
     "rarible_editions:deploy:eclipse-test-net": "anchor build -p rarible_editions && anchor deploy -p rarible_editions --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
+    "rarible_editions:extend": "solana program extend Rari9ftBd6vFdtpn8TDLwN2ze24KKkM5MLEETNiBMNn 1028896",
+    "rarible_editions:upgrade:eclipse-test-net": "anchor upgrade target/deploy/rarible_editions.so --program-id Rari9ftBd6vFdtpn8TDLwN2ze24KKkM5MLEETNiBMNn --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
+    "rarible_editions_controls:upgrade:eclipse-test-net": "anchor upgrade target/deploy/rarible_editions_controls.so --program-id RariUNM3vz1rwxPg8UJyRAN7rSKXxgd2ncS2ddCa4ZE --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
     "rarible_editions_controls:deploy:eclipse-test-net": "anchor build -p rarible_editions_controls && anchor deploy -p rarible_editions_controls --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
     "rarible_marketplace:deploy:eclipse-test-net": "anchor build -p rarible_marketplace && anchor deploy -p rarible_marketplace --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
 
     "rarible_group:deploy:eclipse-main-net": "solana program deploy ./bins/spl_token_group_example.so --program-id target/deploy/spl_token_group_example-keypair.json --url https://mainnetbeta-rpc.eclipse.xyz",
-    "rarible_editions:deploy:eclipse-main-net": "anchor build -p rarible_editions && anchor deploy -p rarible_editions --provider.cluster https://mainnetbeta-rpc.eclipse.xyz --provider.wallet ~/.config/solana/id.json",
-    "rarible_editions_controls:deploy:eclipse-main-net": "anchor build -p rarible_editions_controls && anchor deploy -p rarible_editions_controls --provider.cluster https://mainnetbeta-rpc.eclipse.xyz --provider.wallet ~/.config/solana/id.json",
-    "rarible_marketplace:deploy:eclipse-main-net": "anchor build -p rarible_marketplace && anchor deploy -p rarible_marketplace --provider.cluster https://mainnetbeta-rpc.eclipse.xyz --provider.wallet ~/.config/solana/id.json"
+    "rarible_editions:deploy:eclipse-main-net": "anchor build -p rarible_editions && anchor deploy -p rarible_editions --provider.cluster https://mainnetbeta-rpc.eclipse.xyz --provider.wallet ~/.config/solana/prod-keypair.json",
+    "rarible_editions:deploy:buffer:eclipse-main-net": "solana program deploy ./target/deploy/rarible_editions.so --program-id target/deploy/rarible_editions-keypair.json --url https://mainnetbeta-rpc.eclipse.xyz --buffer ./deploy.json",
+    "rarible_editions_controls:deploy:eclipse-main-net": "anchor build -p rarible_editions_controls && anchor deploy -p rarible_editions_controls --provider.cluster https://mainnetbeta-rpc.eclipse.xyz --provider.wallet ~/.config/solana/prod-keypair.json",
+    "rarible_editions_controls:deploy:buffer:eclipse-main-net": "solana program deploy ./target/deploy/rarible_editions_controls.so --program-id target/deploy/rarible_editions_controls-keypair.json --url https://mainnetbeta-rpc.eclipse.xyz --buffer ./deploy.json",
+    "rarible_marketplace:deploy:eclipse-main-net": "anchor build -p rarible_marketplace && anchor deploy -p rarible_marketplace --provider.cluster https://mainnetbeta-rpc.eclipse.xyz --provider.wallet ~/.config/solana/id.json",
+    "extend-editions": "solana program extend Rari9ftBd6vFdtpn8TDLwN2ze24KKkM5MLEETNiBMNn 1028896",
+    "extend-controls": "solana program extend RariUNM3vz1rwxPg8UJyRAN7rSKXxgd2ncS2ddCa4ZE 1005440",
+    "rarible_editions:upgrade:eclipse-main-net": "anchor upgrade target/deploy/rarible_editions.so --program-id Rari9ftBd6vFdtpn8TDLwN2ze24KKkM5MLEETNiBMNn --provider.cluster https://mainnetbeta-rpc.eclipse.xyz --provider.wallet ~/.config/solana/prod-keypair.json",
+    "extend-deploy-editions": "solana program deploy ./target/deploy/rarible_editions.so --buffer ./deploy.json",
+    "rarible_editions_controls:upgrade:eclipse-main-net": "anchor upgrade target/deploy/rarible_editions_controls.so --program-id RariUNM3vz1rwxPg8UJyRAN7rSKXxgd2ncS2ddCa4ZE --provider.cluster https://mainnetbeta-rpc.eclipse.xyz --provider.wallet ~/.config/solana/prod-keypair.json",
+    "extend-deploy-editions-controls": "solana program deploy ./target/deploy/rarible_editions_controls.so --buffer ./deploy.json"
+    
   },
   "repository": {
     "type": "git",

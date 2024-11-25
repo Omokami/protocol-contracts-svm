@@ -34,6 +34,12 @@ pub mod rarible_editions_controls {
         instructions::add_phase(ctx, input)
     }
 
+    pub fn modify_phase(
+        ctx: Context<ModifyPhaseCtx>,
+        input: ModifyPhaseInput) -> Result<()> {
+        instructions::modify_phase(ctx, input)
+    }
+
     pub fn mint_with_controls<'info>(ctx: Context<'_, '_, '_, 'info, MintWithControlsCtx<'info>>, mint_input: MintInput) -> Result<()> {
         instructions::mint_with_controls(ctx, mint_input)
     }

@@ -3329,7 +3329,6 @@ dependencies = [
  "anchor-spl",
  "arrayref",
  "dyn-fmt",
- "libreplex_shared",
  "serde",
  "serde_json",
  "solana-program",

@@ -4,34 +4,19 @@ use anchor_spl::{
     associated_token::AssociatedToken, token_2022,
 };
 use dyn_fmt::AsStrFormatExt;
-use libreplex_shared::{create_token_2022_and_metadata, operations::mint_non_fungible_2022_logic, MintAccounts2022, SharedError, TokenMemberInput};
 use spl_pod::optional_keys::OptionalNonZeroPubkey;
 use spl_token_metadata_interface::state::{Field, TokenMetadata};
 
 use crate::utils::{get_mint_metadata, update_account_lamports_to_minimum_balance};
-use crate::{add_to_hashlist, errors::EditionsError, group_extension_program, EditionsDeployment, HashlistMarker};
+use crate::{ errors::EditionsError, group_extension_program, EditionsDeployment};
+use crate::shared::{SharedError,create_token_2022_and_metadata, MintAccounts2022, TokenMemberInput, mint_non_fungible_2022_logic };
 
+use super::TokenGroupInput;
 #[derive(Accounts)]
 pub struct MintCtx<'info> {
     #[account(mut,
         seeds = ["editions_deployment".as_ref(), editions_deployment.symbol.as_ref()], bump)]
     pub editions_deployment: Account<'info, EditionsDeployment>,
-
-    /// CHECK: Checked in PDA. Not deserialized because it can be rather big
-    #[account(mut, 
-        seeds = ["hashlist".as_bytes(), 
-        editions_deployment.key().as_ref()],
-        bump,)]
-    pub hashlist: UncheckedAccount<'info>,
-
-    #[account(init, 
-        space = HashlistMarker::SIZE,
-        payer = payer,
-        seeds = ["hashlist_marker".as_bytes(), 
-        editions_deployment.key().as_ref(),
-        mint.key().as_ref()],
-        bump,)]
-    pub hashlist_marker: Account<'info, HashlistMarker>,
 
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -108,7 +93,6 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, MintCtx<'info>>) -> Result<()
     let group_extension_program = &ctx.accounts.group_extension_program;
     // mutable borrows
     let editions_deployment = &mut ctx.accounts.editions_deployment;
-    let hashlist = &mut ctx.accounts.hashlist;
 
     if !editions_deployment.cosigner_program_id.eq(&system_program::ID) && !signer.key().eq(&editions_deployment.creator.key()) {
         return Err(SharedError::InvalidCreatorCosigner.into());
@@ -178,20 +162,12 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, MintCtx<'info>>) -> Result<()
     )?;
 
     editions_deployment.number_of_tokens_issued += 1;
-    add_to_hashlist(
-        editions_deployment.number_of_tokens_issued as u32,
-        hashlist,
-        payer,
-        system_program,
-        &mint.key(),
-        editions_deployment.number_of_tokens_issued,
-    )?;
 
     // Retrieve metadata from the group mint
     let meta = get_mint_metadata(&mut group_mint.to_account_info())?;
     let additional_meta = meta.additional_metadata;
 
-    // Process each additional metadata key-value pair, excluding platform fee metadata
+    // Process each additional metadata key-value pair, excluding platform fee 
     for additional_metadatum in additional_meta {
 
         let deployment_seeds: &[&[u8]] = &[

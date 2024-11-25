@@ -1,6 +1,6 @@
 use crate::{group_extension_program, utils::update_account_lamports_to_minimum_balance, EditionsDeployment, Hashlist, NAME_LIMIT, URI_LIMIT, SYMBOL_LIMIT};
 use anchor_lang::prelude::*;
-use libreplex_shared::{create_token_2022_and_metadata, MintAccounts2022, TokenGroupInput};
+use crate::shared::{create_token_2022_and_metadata, MintAccounts2022, TokenGroupInput};
 use solana_program::system_program;
 use spl_pod::optional_keys::OptionalNonZeroPubkey;
 use spl_token_metadata_interface::state::TokenMetadata;

@@ -4,6 +4,9 @@ pub use initialise::*;
 pub mod add_phase;
 pub use add_phase::*;
 
+pub mod modify_phase;
+pub use modify_phase::*;
+
 pub mod update_royalties;
 pub use update_royalties::*;
 

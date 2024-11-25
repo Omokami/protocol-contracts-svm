@@ -1,7 +1,7 @@
 import { writeToCSV, writeToCSVWithErrorCode, deduplicateEntries, RawEntry } from "./utils";
 import { verifyTransactionBatch } from "./verify-burn-tx";
 
-export const generateAllowlist = async (rawEntries: RawEntry[], BATCH_SIZE: number = 1000) => {
+export const generateAllowlist = async (rawEntries: RawEntry[], BATCH_SIZE: number = 10) => {
   if (!process.env.BURN_CONTRACT_ADDRESS) {
     throw new Error("BURN_CONTRACT_ADDRESS must be set");
   }

@@ -37,6 +37,7 @@ export async function sendSignedTransaction({
   timeout?: number;
   skipPreflight?: boolean;
 }): Promise<{ txid: string; }> {
+  console.log("Raw transaction start: ", signedTransaction.nonceInfo?.nonce);
   const rawTransaction = signedTransaction.serialize();
   console.log("Raw transaction length:", rawTransaction.length);
 

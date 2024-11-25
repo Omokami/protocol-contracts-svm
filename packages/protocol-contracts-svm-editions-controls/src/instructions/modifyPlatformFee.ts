@@ -19,7 +19,6 @@ export const modifyPlatformFee = async ({
 }: IExecutorParams<IModifyPlatformFee>) => {
   const { editionsId, platformFeeValue, isFeeFlat, recipients } = params;
 
-  const raribleEditionsProgram = getProgramInstanceEditions(connection);
   const editionsControlsProgram = getProgramInstanceEditionsControls(connection);
 
   const editions = new PublicKey(editionsId);
@@ -29,19 +28,12 @@ export const modifyPlatformFee = async ({
     throw Error("Editions not found");
   }
 
-  const editionsObj = decodeEditions(raribleEditionsProgram)(editionsData.data, editions);
-
   const editionsControlsPda = getEditionsControlsPda(editions)[0];
   const editionsControlsData = await connection.getAccountInfo(editionsControlsPda);
 
   if (!editionsControlsData) {
     throw Error("Editions controls not found");
   }
-
-  const editionsControlsObj = decodeEditionsControls(editionsControlsProgram)(
-    editionsControlsData.data,
-    editionsControlsPda
-  );
 
   // Create the instruction to modify the platform fee
   const instruction = await editionsControlsProgram.methods

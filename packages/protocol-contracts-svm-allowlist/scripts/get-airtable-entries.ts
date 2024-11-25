@@ -1,9 +1,15 @@
-import { fetchAllAirtableRecords } from "../src/get-airtable-entries";
-import { writeRawToCSV } from "../src/utils";
 
+import { writeRawToCSV } from "../src/utils";
+import {fetchAllCsvRecords } from"../src/fetchAllCsvRecords"
 const main = async () => {
-  const rawEntries = await fetchAllAirtableRecords();
-  await writeRawToCSV("raw-burners.csv", rawEntries);
+  try {
+    const rawEntries = await fetchAllCsvRecords();
+    await writeRawToCSV("raw-burners.csv", rawEntries);
+  } catch (error){
+    console.log(error)
+  }
+  
+
 };
 
 main();
