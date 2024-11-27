@@ -65,10 +65,10 @@ npx ts-node ./src/cli/modifyPhase.ts \
   -d 4oY7P2c6E3h7SgunSZGMaeSeNHqMU65GkfYuh7e9Xamv \
   -k ~/.config/solana/id.json \
   -r https://testnet.dev2.eclipsenetwork.xyz \
-  --maxMintsPerWallet 3 \
+  --maxMintsPerWallet 1 \
   --maxMintsTotal 10000 \
   --priceAmount 4000000 \
   -s 1732539600 \
-  -e 1732636800
+  -e 1732636800 --phaseIndex 3
 
   

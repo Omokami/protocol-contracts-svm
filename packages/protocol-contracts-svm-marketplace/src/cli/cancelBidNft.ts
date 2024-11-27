@@ -2,9 +2,8 @@
 
 import { Connection, PublicKey } from "@solana/web3.js";
 import { Command } from "commander";
-import { fillOrder } from "../instructions";
+import { cancelBid } from "../instructions";
 import { getWallet } from "@rarible_int/protocol-contracts-svm-core";
-import { BN } from "@coral-xyz/anchor";
 
 const cli = new Command();
 
@@ -14,7 +13,6 @@ cli
   .requiredOption("-k, --keypairPath <keypairPath>", "Path to the keypair file")
   .requiredOption("-r, --rpc <rpc>", "RPC endpoint URL")
   .requiredOption("-o, --order <order>", "Order Identifier")
-  .requiredOption("--amountToFill <amountToFill>", "amountToFill of the listing")
   .option("--ledger", "Use Ledger for signing transactions")
   .parse(process.argv);
 
@@ -25,18 +23,16 @@ const opts = cli.opts();
   const wallet = await getWallet(opts.ledger, opts.keypairPath);
 
   try {
-    const { txid, order } = await fillOrder({
+    const { txid, order } = await cancelBid({
       wallet,
       params: {
-          orderAddress: opts.order,
-          extraAccountParams: undefined,
-          amountToFill: 1
+          orderId: opts.order,
       },
       connection,
     });
 
     console.log(`Transaction ID: ${txid}`);
-    console.log(`Order Account: ${order.market}`);
+    console.log(`Order Account: ${order}`);
   } catch (e) {
     console.error("An error occurred:", e);
   }

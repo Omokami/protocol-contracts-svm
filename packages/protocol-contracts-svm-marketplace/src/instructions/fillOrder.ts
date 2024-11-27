@@ -49,7 +49,7 @@ import {
   
     const orderAddress = params.orderAddress;
     const amountToFill = params.amountToFill;
-    const nftMint = new PublicKey(params.nftMint);
+    
     const extraAccountParams = params.extraAccountParams;
   
     // Fetch order by address
@@ -58,6 +58,7 @@ import {
       console.error("Order not found.");
       return undefined;
     }
+    const nftMint = new PublicKey(order.nftMint);
   
     // Fetch market
     const market = await fetchMarketByAddress(provider, order.market.toString());

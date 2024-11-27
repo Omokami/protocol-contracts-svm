@@ -38,6 +38,9 @@
     "rarible_editions_controls:upgrade:eclipse-test-net": "anchor upgrade target/deploy/rarible_editions_controls.so --program-id RariUNM3vz1rwxPg8UJyRAN7rSKXxgd2ncS2ddCa4ZE --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
     "rarible_editions_controls:deploy:eclipse-test-net": "anchor build -p rarible_editions_controls && anchor deploy -p rarible_editions_controls --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
     "rarible_marketplace:deploy:eclipse-test-net": "anchor build -p rarible_marketplace && anchor deploy -p rarible_marketplace --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
+    "rarible_marketplace:upgrade:eclipse-test-net": "anchor upgrade target/deploy/rarible_marketplace.so --program-id Rarim7DMoD45z1o25QWPsWvTdFSSEdxaxriwWZLLTic --provider.cluster https://testnet.dev2.eclipsenetwork.xyz --provider.wallet ~/.config/solana/id.json",
+    "rarible_marketplace:upgrade:manual:eclipse-test-net": "solana program deploy target/deploy/rarible_marketplace.so --buffer ./deploy.json --url https://testnet.dev2.eclipsenetwork.xyz --keypair ~/.config/solana/id.json",
+    "rarible_marketplace:extend": "solana program extend Rarim7DMoD45z1o25QWPsWvTdFSSEdxaxriwWZLLTic 677568",
 
     "rarible_group:deploy:eclipse-main-net": "solana program deploy ./bins/spl_token_group_example.so --program-id target/deploy/spl_token_group_example-keypair.json --url https://mainnetbeta-rpc.eclipse.xyz",
     "rarible_editions:deploy:eclipse-main-net": "anchor build -p rarible_editions && anchor deploy -p rarible_editions --provider.cluster https://mainnetbeta-rpc.eclipse.xyz --provider.wallet ~/.config/solana/prod-keypair.json",

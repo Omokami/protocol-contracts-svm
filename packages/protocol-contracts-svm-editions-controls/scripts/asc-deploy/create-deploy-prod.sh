@@ -48,3 +48,13 @@ npx ts-node ./src/cli/addPhase.ts \
   --priceAmount 40000000 \
   -s 1732633200 \
   -e 1733238000
+
+npx ts-node ./src/cli/modifyPhase.ts \
+  -d 3x6Gqc2qFTgwq87LEe1wmybPJLFZPiE8QnSXxDkrAC9E \
+  -k ~/.config/solana/prod-keypair.json \
+  -r https://mainnetbeta-rpc.eclipse.xyz \
+  --maxMintsPerWallet 1 \
+  --maxMintsTotal 10000 \
+  --priceAmount 40000000 \
+  -s 1732633200 \
+  -e 1733238000 --phaseIndex 2

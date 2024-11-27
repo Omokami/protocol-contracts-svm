@@ -24,9 +24,12 @@ export type BidParams = {
 	extraAccountParams: WnsAccountParams | undefined; // Add metaplex
 };
 
+export type CancelBidParams = {
+	orderId: string;
+};
+
 export type FillOrderParams = {
     orderAddress: string;
-    amountToFill: number; 
-    nftMint: string;
+    amountToFill: number;
     extraAccountParams: WnsAccountParams | undefined
 }

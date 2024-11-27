@@ -26,7 +26,7 @@ npx ts-node ./src/cli/createDeployment.ts \
   -t BTicWgGhoTsBANuirXS7UCeF6bxfvTnCaxM5HQRRfGZS \
   -k ~/.config/solana/id.json \
   -r https://testnet.dev2.eclipsenetwork.xyz \
-  -s CAT04 \
+  -s CAT05M \
   --maxNumberOfTokens 1000 \
   --maxMintsPerWallet 100 \
   -u "https://bafybeiekoh7qusezbcltttym6ja2ai3vxftx2izokbtumuahys3juw5grq.ipfs.w3s.link/figure31-meta.json" \
@@ -38,8 +38,8 @@ npx ts-node ./src/cli/createDeployment.ts \
   --isFeeFlat \
   --extraMeta "type:handmade" "author:Vadim" "value:important" \
   --itemBaseUri "ipfs://QmdHaufjUDJgbZzZ4eFCjtJQyeQpuNwoEvqLm5rq159vC8/{}" \
-  --itemBaseName "Cat #{}" 
+  --itemBaseName "Cat M #{}" 
 
-npx ts-node ./src/cli/addPhase.ts -d 6rr6y63XZNjoSWFejvUtVTgvKxxM3iiUNST2g758QXXB -k ~/.config/solana/id.json -r https://testnet.dev2.eclipsenetwork.xyz --maxMintsPerWallet 100 --maxMintsTotal 1000 --priceAmount 500 -s 1709564319 -e 1731938380
+npx ts-node ./src/cli/addPhase.ts -d 5rPxHARWC3XVjXfFueVzUibCNKUw22hkhdjmj5BqBxEg -k ~/.config/solana/id.json -r https://testnet.dev2.eclipsenetwork.xyz --maxMintsPerWallet 100 --maxMintsTotal 1000 --priceAmount 500 -s 1709564319 -e 1991938380
 
-npx ts-node ./src/cli/mintWithControls.ts -d 6rr6y63XZNjoSWFejvUtVTgvKxxM3iiUNST2g758QXXB -k ~/.config/solana/id.json -r https://testnet.dev2.eclipsenetwork.xyz -p 0 -n 1
+npx ts-node ./src/cli/mintWithControls.ts -d 5rPxHARWC3XVjXfFueVzUibCNKUw22hkhdjmj5BqBxEg -k ~/.config/solana/id.json -r https://testnet.dev2.eclipsenetwork.xyz -p 0 -n 1
