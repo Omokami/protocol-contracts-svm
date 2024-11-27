@@ -11,8 +11,8 @@ import {
 
 export type InitMarketParams = {
 	marketIdentifier: string;
-	feeRecipient: string;
-	feeBps: number;
+	feeRecipients: string[];
+	feeBps: number[];
 };
 
 // Initialize Market
@@ -21,8 +21,15 @@ export const getInitializeMarket = async (provider: Provider, marketParams: Init
 	const market = getMarketPda(marketParams.marketIdentifier);
 	const eventAuthority = getEventAuthority();
 
+	let feeRecipients = marketParams.feeRecipients;
+	let feeBps = marketParams.feeBps;
+
+	if (feeRecipients.length !== 3 || feeBps.length !== 3) {
+		throw Error("Invalid fee params");
+	}
+
 	const ix = await marketProgram.methods
-		.initMarket({ feeBps: new BN(marketParams.feeBps), feeRecipient: new PublicKey(marketParams.feeRecipient) })
+		.initMarket({ feeBps: marketParams.feeBps.map((f) => new BN(f)), feeRecipients: marketParams.feeRecipients.map((f) => new PublicKey(f)) })
 		.accountsStrict({
 			initializer: provider.publicKey,
 			marketIdentifier: marketParams.marketIdentifier,

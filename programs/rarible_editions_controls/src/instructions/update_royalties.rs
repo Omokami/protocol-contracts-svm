@@ -1,9 +1,9 @@
-use anchor_lang::{prelude::*};
-use rarible_editions::{EditionsDeployment, UpdateRoyaltiesArgs};
-use rarible_editions::program::RaribleEditions;
-use anchor_spl::token_interface::{Mint};
-use rarible_editions::cpi::accounts::ModifyRoyalties;
 use crate::EditionsControls;
+use anchor_lang::prelude::*;
+use anchor_spl::token_interface::Mint;
+use rarible_editions::cpi::accounts::ModifyRoyalties;
+use rarible_editions::program::RaribleEditions;
+use rarible_editions::{EditionsDeployment, UpdateRoyaltiesArgs};
 
 #[derive(Accounts)]
 #[instruction(input: UpdateRoyaltiesArgs)]
@@ -38,12 +38,13 @@ pub struct UpdateRoyaltiesCtx<'info> {
     #[account(address = spl_token_2022::ID)]
     pub token_program: AccountInfo<'info>,
 
-    pub rarible_editions_program: Program<'info, RaribleEditions>
-
+    pub rarible_editions_program: Program<'info, RaribleEditions>,
 }
 
-pub fn update_royalties(ctx: Context<UpdateRoyaltiesCtx>, royalties_input: UpdateRoyaltiesArgs) -> Result<()> {
-
+pub fn update_royalties(
+    ctx: Context<UpdateRoyaltiesCtx>,
+    royalties_input: UpdateRoyaltiesArgs,
+) -> Result<()> {
     let editions_controls = &mut ctx.accounts.editions_controls;
     let rarible_editions_program = &ctx.accounts.rarible_editions_program;
     let editions_deployment = &ctx.accounts.editions_deployment;
@@ -70,8 +71,10 @@ pub fn update_royalties(ctx: Context<UpdateRoyaltiesCtx>, royalties_input: Updat
                 token_program: token_program.to_account_info(),
                 system_program: system_program.to_account_info(),
             },
-            &[seeds]
-        ), royalties_input)?;
+            &[seeds],
+        ),
+        royalties_input,
+    )?;
 
     Ok(())
 }

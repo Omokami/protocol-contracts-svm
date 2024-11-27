@@ -1,8 +1,8 @@
-use anchor_lang::{prelude::*};
-use rarible_editions::{EditionsDeployment};
-use rarible_editions::program::RaribleEditions;
-use anchor_spl::token_interface::{Mint};
 use crate::{EditionsControls, PlatformFeeRecipient, UpdatePlatformFeeArgs};
+use anchor_lang::prelude::*;
+use anchor_spl::token_interface::Mint;
+use rarible_editions::program::RaribleEditions;
+use rarible_editions::EditionsDeployment;
 
 #[derive(Accounts)]
 #[instruction(input: UpdatePlatformFeeArgs)]
@@ -24,11 +24,12 @@ pub struct UpdatePlatformFeeCtx<'info> {
         constraint = editions_controls.platform_fee_primary_admin == creator.key() ||
                      editions_controls.platform_fee_secondary_admin == creator.key())]
     pub creator: Signer<'info>,
-
 }
 
-pub fn update_platform_fee(ctx: Context<UpdatePlatformFeeCtx>, platform_fee_input: UpdatePlatformFeeArgs) -> Result<()> {
-
+pub fn update_platform_fee(
+    ctx: Context<UpdatePlatformFeeCtx>,
+    platform_fee_input: UpdatePlatformFeeArgs,
+) -> Result<()> {
     let platform_fee_value = platform_fee_input.platform_fee_value;
     let is_fee_flat = platform_fee_input.is_fee_flat;
 

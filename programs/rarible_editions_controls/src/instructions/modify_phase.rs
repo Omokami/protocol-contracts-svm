@@ -1,17 +1,17 @@
 use anchor_lang::prelude::*;
-use rarible_editions::program::RaribleEditions;
 use libreplex_shared::wrapped_sol;
+use rarible_editions::program::RaribleEditions;
 
 use crate::{EditionsControls, Phase};
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ModifyPhaseInput {
-    pub price_amount: u64, 
+    pub price_amount: u64,
     pub price_token: Pubkey,
-    pub start_time: i64, 
+    pub start_time: i64,
     pub max_mints_per_wallet: u64,
     pub max_mints_total: u64,
-    pub end_time: i64, 
+    pub end_time: i64,
     pub is_private: bool,
     pub active: bool,
     pub merkle_root: Option<[u8; 32]>,
@@ -39,7 +39,7 @@ pub struct ModifyPhaseCtx<'info> {
     #[account(address = spl_token_2022::ID)]
     pub token_program: AccountInfo<'info>,
 
-    pub rarible_editions_program: Program<'info, RaribleEditions>
+    pub rarible_editions_program: Program<'info, RaribleEditions>,
 }
 
 pub fn modify_phase(ctx: Context<ModifyPhaseCtx>, input: ModifyPhaseInput) -> Result<()> {

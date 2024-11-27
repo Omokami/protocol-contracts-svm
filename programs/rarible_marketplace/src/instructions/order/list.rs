@@ -1,22 +1,12 @@
 use anchor_lang::{prelude::*, solana_program::sysvar};
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token_interface::{
-        approve, Approve, Mint, TokenAccount, TokenInterface,
-    },
+    token_interface::{approve, Approve, Mint, TokenAccount, TokenInterface},
 };
-use wen_new_standard::cpi::{accounts::FreezeDelegatedAccount, freeze_mint_account};
-use mpl_token_metadata::accounts::Metadata;
 
 // use spl_token_group_interface::state::TokenGroupMember;
 
-use crate::{
-    errors::MarketError,
-    state::*,
-    utils::{
-        get_bump_in_seed_form, metaplex::pnft::utils::get_is_pnft, mplx_transfer::{ExtraTransferParams, MetaplexAdditionalTransferAccounts}, parse_remaining_accounts_pnft, verify_wns_mint
-    },
-};
+use crate::{errors::MarketError, state::*, utils::verify_wns_mint};
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ListData {
@@ -105,22 +95,6 @@ impl<'info> ListNft<'info> {
             size, // supply = 1
         )
     }
-
-    fn verify_mint(&self, verification_account: &AccountInfo<'info>) -> Result<()> {
-        if verification_account.key()
-            != get_verification_pda(self.nft_mint.key(), self.market.key()).0
-        {
-            return Err(MarketError::InvalidNft.into());
-        }
-        let verification =
-            MintVerification::deserialize(&mut &verification_account.data.borrow_mut()[8..])?;
-
-        if verification.verified != 1 {
-            return Err(MarketError::InvalidNft.into());
-        }
-
-        Ok(())
-    }
 }
 
 #[inline(always)]
@@ -151,58 +125,10 @@ pub fn handler<'info>(
         true,
     );
 
-    let bump = &get_bump_in_seed_form(&ctx.bumps.order);
-    let signer_seeds: &[&[&[u8]]; 1] = &[&[
-        ORDER_SEED,
-        ctx.accounts.order.nonce.as_ref(),
-        ctx.accounts.order.market.as_ref(),
-        ctx.accounts.order.owner.as_ref(),
-        bump,
-    ][..]];
     // NFT Transfer
     if *nft_token_program_key == TOKEN_PID {
         // Check if its metaplex or not
         if *nft_program_key == METAPLEX_PID {
-            // If it's metaplex, we parse the first remaining account as nft_metadata
-            let nft_metadata = remaining_accounts.get(0).unwrap();
-            let nft_edition = remaining_accounts.get(1).unwrap();
-
-            // Must use manual verify for Metaplex
-            let verification_account = remaining_accounts.get(2).unwrap();
-
-            ctx.accounts.verify_mint(verification_account)?;
-
-            // The remaining metadata accounts are (PNFT ONLY):
-            // 0 owner_token_record or default,
-            // 1 authorization_rules or default,
-            // 2 authorization_rules_program or default,
-            // 3 destination_token_record or default,
-            // 4 delegate record or default,
-            // 5 existing delegate or default,
-            // 6 existing delegate record or default
-
-            let (_, extra_remaining_accounts) = remaining_accounts.split_at(3);
-
-            let parsed_accounts =
-                parse_remaining_accounts_pnft(extra_remaining_accounts.to_vec(), true, None);
-            let pnft_params = parsed_accounts.pnft_params;
-
-            let parsed_metadata = Metadata::safe_deserialize(&nft_metadata.data.borrow())?;
-            let is_pnft = get_is_pnft(&parsed_metadata);
-
-            let extra_accounts = ExtraTransferParams {
-                owner_token_record: pnft_params.owner_token_record,
-                dest_token_record: pnft_params.destination_token_record,
-                authorization_rules: pnft_params.authorization_rules,
-                authorization_data: None,
-                authorization_rules_program: pnft_params.authorization_rules_program,
-            };
-
-            let transfer_params = MetaplexAdditionalTransferAccounts {
-                metadata: nft_metadata.to_account_info(),
-                edition: nft_edition.to_account_info(),
-                extra_accounts,
-            };
             // TODO Delegate Metaplex NFT
             return Err(MarketError::UnsupportedNft.into());
             // ctx.accounts.metaplex_nft_transfer(is_pnft, transfer_params)?;
@@ -215,14 +141,19 @@ pub fn handler<'info>(
         let mut token22_ra = remaining_accounts.clone();
         if *nft_program_key == WNS_PID {
             let group_member_account = remaining_accounts.get(4).unwrap();
-            
+
             let (_, extra_remaining_accounts) = remaining_accounts.split_at(7);
             token22_ra = extra_remaining_accounts.to_vec();
-            
-            verify_wns_mint(ctx.accounts.nft_mint.to_account_info(),group_member_account.to_account_info(), ctx.accounts.market.market_identifier.clone())?;
+
+            verify_wns_mint(
+                ctx.accounts.nft_mint.to_account_info(),
+                group_member_account.to_account_info(),
+                ctx.accounts.market.market_identifier.clone(),
+            )?;
         }
         // Pass in RA for delegate as needed
-        ctx.accounts.token22_nft_delegate(data.size, token22_ra.clone())?;
+        ctx.accounts
+            .token22_nft_delegate(data.size, token22_ra.clone())?;
     } else if *nft_token_program_key == BUBBLEGUM_PID {
         // Transfer compressed NFT
         // TODO

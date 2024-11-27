@@ -14,4 +14,6 @@ pub enum MarketError {
     UnsupportedNft,
     #[msg("Invalid NFT for Market")]
     InvalidNft,
+    #[msg("Invalid Fee Account")]
+    InvalidFeeAccount,
 }

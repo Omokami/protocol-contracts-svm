@@ -2,16 +2,10 @@ use anchor_lang::prelude::*;
 use anchor_lang::{solana_program::sysvar, Key};
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token_interface::{revoke, Mint, Revoke, TokenAccount, TokenInterface};
-use mpl_token_metadata::accounts::Metadata;
 
 use crate::errors::MarketError;
 use crate::state::*;
-use crate::utils::metaplex::pnft::utils::get_is_pnft;
-use crate::utils::mplx_transfer::{
-    transfer_metaplex_nft, ExtraTransferParams, MetaplexAdditionalTransferAccounts,
-    TransferMetaplexNft,
-};
-use crate::utils::{get_bump_in_seed_form, parse_remaining_accounts_pnft};
+use crate::utils::get_bump_in_seed_form;
 
 #[derive(Accounts)]
 #[instruction()]
@@ -116,8 +110,7 @@ pub fn handler<'info>(ctx: Context<'_, '_, '_, 'info, CancelListing<'info>>) -> 
         }
     } else if *nft_token_program_key == TOKEN_EXT_PID {
         let token22_ra = remaining_accounts.clone();
-        ctx.accounts
-            .token22_nft_revoke(signer_seeds, token22_ra)?;
+        ctx.accounts.token22_nft_revoke(signer_seeds, token22_ra)?;
     } else if *nft_token_program_key == BUBBLEGUM_PID {
         // Transfer compressed NFT
         // TODO

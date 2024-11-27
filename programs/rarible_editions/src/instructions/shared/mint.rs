@@ -7,7 +7,6 @@ use anchor_spl::{
 use crate::SharedError;
 // use libreplex_shared::sysvar_instructions_program;
 
-
 pub fn mint_non_fungible_2022_logic<'a>(
     non_fungible_mint: &AccountInfo<'a>,
     non_fungible_token_account: &AccountInfo<'a>,
@@ -29,10 +28,7 @@ pub fn mint_non_fungible_2022_logic<'a>(
     if expected_token_account != non_fungible_token_account.key() {
         return Err(SharedError::InvalidTokenAccount.into());
     }
-    if non_fungible_token_account
-        .to_account_info()
-        .data_is_empty()
-    {
+    if non_fungible_token_account.to_account_info().data_is_empty() {
         msg!("{}", payer.key());
         anchor_spl::associated_token::create(CpiContext::new_with_signer(
             associated_token_program.to_account_info(),
@@ -44,7 +40,7 @@ pub fn mint_non_fungible_2022_logic<'a>(
                 system_program: system_program.to_account_info(),
                 token_program: token_program.to_account_info(),
             },
-            &[deployment_seeds]
+            &[deployment_seeds],
         ))?;
     }
 
@@ -62,8 +58,8 @@ pub fn mint_non_fungible_2022_logic<'a>(
             ),
             1,
         )?;
-        // no longer removing freeze auth etc as this 
-        // kills things like escrowless staking. keeping update 
+        // no longer removing freeze auth etc as this
+        // kills things like escrowless staking. keeping update
         // auth too
 
         // msg!("Removing freeze auth - non_fungible");
@@ -90,7 +86,7 @@ pub fn mint_non_fungible_2022_logic<'a>(
                     current_authority: authority.clone(),
                     account_or_mint: non_fungible_mint.clone(),
                 },
-                &[deployment_seeds]
+                &[deployment_seeds],
             ),
             anchor_spl::token_2022::spl_token_2022::instruction::AuthorityType::MintTokens,
             None,

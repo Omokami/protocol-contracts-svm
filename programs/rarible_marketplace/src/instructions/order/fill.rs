@@ -4,9 +4,7 @@ use anchor_lang::{prelude::*, solana_program::sysvar};
 use anchor_spl::{
     associated_token::AssociatedToken,
     token_2022::spl_token_2022::instruction::transfer_checked as transfer_2022,
-    token_interface::{
-        transfer_checked, Mint, TokenInterface, TransferChecked,
-    },
+    token_interface::{transfer_checked, Mint, TokenInterface, TransferChecked},
 };
 use spl_transfer_hook_interface::onchain::add_extra_accounts_for_execute_cpi;
 
@@ -20,7 +18,9 @@ use crate::{
     errors::MarketError,
     state::*,
     utils::{
-        create_ata, get_amount_from_bp, get_bump_in_seed_form, get_fee_amount, invoke_unwrap_sol, invoke_wrap_sol, token_extensions::WnsApprovalAccounts, verify_wns_mint, UnwrapSolAccounts, WrapSolAccounts, WSOL_MINT
+        create_ata, get_amount_from_bp, get_bump_in_seed_form, get_fee_amount, invoke_unwrap_sol,
+        invoke_wrap_sol, token_extensions::WnsApprovalAccounts, verify_wns_mint, UnwrapSolAccounts,
+        WrapSolAccounts, WSOL_MINT,
     },
 };
 
@@ -61,12 +61,6 @@ pub struct FillOrder<'info> {
     #[account(mut)]
     /// CHECK: checked by create_ata function
     pub buyer_nft_ta: UncheckedAccount<'info>,
-    #[account(mut, constraint = fee_recipient.key() == market.fee_recipient.key())]
-    /// CHECK: constraint check
-    pub fee_recipient: UncheckedAccount<'info>,
-    #[account(mut)]
-    /// CHECK: checked by create_ata function
-    pub fee_recipient_ta: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
     pub nft_token_program: Interface<'info, TokenInterface>,
     /// CHECK: checked by constraint and in cpi
@@ -194,7 +188,7 @@ impl<'info> FillOrder<'info> {
         } else {
             self.order.to_account_info().clone()
         };
-        
+
         let mut transfer_ix = transfer_2022(
             self.nft_token_program.key,
             self.seller_nft_ta.key,
@@ -218,7 +212,7 @@ impl<'info> FillOrder<'info> {
             let additional_account_infos = remaining_accounts.clone();
 
             let hook_program = remaining_accounts.clone().pop().unwrap();
-            
+
             add_extra_accounts_for_execute_cpi(
                 &mut transfer_ix,
                 &mut account_infos,
@@ -231,37 +225,69 @@ impl<'info> FillOrder<'info> {
                 &additional_account_infos,
             )?;
         }
-        
-        anchor_lang::solana_program::program::invoke_signed(&transfer_ix, &account_infos, signer_seeds)?;
+
+        anchor_lang::solana_program::program::invoke_signed(
+            &transfer_ix,
+            &account_infos,
+            signer_seeds,
+        )?;
 
         Ok(())
     }
 
     #[inline(never)]
-    fn transfer_fee(&self, signer_seeds: &[&[&[u8]]], is_buy: bool, amount: u64) -> Result<()> {
-        let cpi_ctx = if is_buy {
-            CpiContext::new_with_signer(
-                self.payment_token_program.to_account_info(),
-                TransferChecked {
-                    from: self.buyer_payment_ta.to_account_info(),
-                    to: self.fee_recipient_ta.to_account_info(),
-                    authority: self.order.to_account_info(),
-                    mint: self.payment_mint.to_account_info(),
-                },
-                signer_seeds,
-            )
+    fn transfer_fee(
+        &self,
+        signer_seeds: &[&[&[u8]]],
+        fee_accounts: Vec<AccountInfo<'info>>,
+        is_buy: bool,
+        fee_amounts: Vec<u64>,
+    ) -> Result<()> {
+        let authority = if is_buy {
+            self.order.to_account_info()
         } else {
-            CpiContext::new(
-                self.payment_token_program.to_account_info(),
-                TransferChecked {
-                    from: self.buyer_payment_ta.to_account_info(),
-                    to: self.fee_recipient_ta.to_account_info(),
-                    authority: self.taker.to_account_info(),
-                    mint: self.payment_mint.to_account_info(),
-                },
-            )
+            self.taker.to_account_info()
         };
-        transfer_checked(cpi_ctx, amount, self.payment_mint.decimals)
+
+        let mut i = 0;
+        for accounts in fee_accounts.chunks(2) {
+            let amount = fee_amounts[i];
+            i = i + 1;
+            if accounts.len() == 2 {
+                // Valid account pair
+                let rec_pubkey = &accounts[0];
+                if rec_pubkey.key().to_string() == Pubkey::default().to_string() {
+                    continue;
+                }
+                let rec_ta = &accounts[1];
+                create_ata(
+                    &rec_ta.to_account_info(),
+                    &self.taker.to_account_info(),
+                    &self.payment_mint.to_account_info(),
+                    &rec_pubkey.to_account_info(),
+                    &self.system_program.to_account_info(),
+                    &self.payment_token_program.to_account_info(),
+                )?;
+                let ctx = TransferChecked {
+                    from: self.buyer_payment_ta.to_account_info(),
+                    to: rec_ta.to_account_info(),
+                    authority: authority.clone(),
+                    mint: self.payment_mint.to_account_info(),
+                };
+                let cpi = if is_buy {
+                    CpiContext::new_with_signer(
+                        self.payment_token_program.to_account_info(),
+                        ctx,
+                        signer_seeds,
+                    )
+                } else {
+                    CpiContext::new(self.payment_token_program.to_account_info(), ctx)
+                };
+                transfer_checked(cpi, amount, self.payment_mint.decimals)?;
+            }
+        }
+
+        Ok(())
     }
 
     #[inline(never)]
@@ -310,7 +336,14 @@ pub fn handler<'info>(
     let nft_token_program_key = &ctx.accounts.nft_token_program.key.to_string().clone();
     let nft_program_key = &ctx.accounts.nft_program.key.to_string().clone();
 
-    let remaining_accounts = ctx.remaining_accounts.to_vec();
+    let all_remaining_accounts = ctx.remaining_accounts.to_vec();
+    // First 6 accounts reserved for accounts and their token accounts. Will be Pubkey default if they're non-existant
+    let (fee_accounts, remaining_accounts) = all_remaining_accounts.split_at(6);
+
+    // Ensure proper accounts and order passed in for fees
+    ctx.accounts
+        .market
+        .verify_fee_accounts(fee_accounts.to_vec())?;
 
     let bump = &get_bump_in_seed_form(&ctx.bumps.order);
 
@@ -331,9 +364,14 @@ pub fn handler<'info>(
 
     let buy_value = amount.checked_mul(buy_price).unwrap();
 
-    let fee_amount = get_fee_amount(buy_value, ctx.accounts.market.fee_bps);
+    let fee_amounts: [u64; 3] = ctx
+        .accounts
+        .market
+        .fee_bps
+        .map(|f| get_fee_amount(buy_value, f));
+    let total_fee_amount: u64 = fee_amounts.iter().sum();
 
-    let mut seller_received_amount = buy_value - fee_amount;
+    let mut seller_received_amount = buy_value - total_fee_amount;
 
     let is_buy = ctx.accounts.order.side == 0;
     // Verify maker + taker accounts
@@ -399,16 +437,6 @@ pub fn handler<'info>(
         &payment_token_program,
     )?;
 
-    let fee_reciever = ctx.accounts.fee_recipient.to_account_info();
-    create_ata(
-        &ctx.accounts.fee_recipient_ta.to_account_info(),
-        &ctx.accounts.taker.to_account_info(),
-        &ctx.accounts.payment_mint.to_account_info(),
-        &fee_reciever,
-        &system_program,
-        &payment_token_program,
-    )?;
-
     ctx.accounts.wrap_sol_if_needed(buy_value, is_buy)?;
 
     // Transfer NFT
@@ -423,7 +451,7 @@ pub fn handler<'info>(
             return Err(MarketError::UnsupportedNft.into());
         }
     } else if *nft_token_program_key == TOKEN_EXT_PID {
-        let mut token22_ra = remaining_accounts.clone();
+        let mut token22_ra = remaining_accounts;
         // Check if its WNS
         if *nft_program_key == WNS_PID {
             // Remaining Accounts 0-2 for approval
@@ -434,10 +462,14 @@ pub fn handler<'info>(
             let group_member_account = remaining_accounts.get(4).unwrap();
             let payment_mint = remaining_accounts.get(5).unwrap();
 
-            verify_wns_mint(ctx.accounts.nft_mint.to_account_info(),group_member_account.to_account_info(), ctx.accounts.market.market_identifier.clone())?;
+            verify_wns_mint(
+                ctx.accounts.nft_mint.to_account_info(),
+                group_member_account.to_account_info(),
+                ctx.accounts.market.market_identifier.clone(),
+            )?;
 
             let (_, extra_remaining_accounts) = remaining_accounts.split_at(6);
-            token22_ra = extra_remaining_accounts.to_vec();
+            token22_ra = extra_remaining_accounts;
 
             let wns_accounts = WnsApprovalAccounts {
                 approval_account: approval_account.to_account_info(),
@@ -465,7 +497,7 @@ pub fn handler<'info>(
         }
         // Any remaining accounts left are for potential transfer hook (Empty if not expecting hook)
         ctx.accounts
-            .token22_nft_transfer(signer_seeds, is_buy, amount, token22_ra)?;
+            .token22_nft_transfer(signer_seeds, is_buy, amount, token22_ra.to_vec())?;
     } else if *nft_token_program_key == BUBBLEGUM_PID {
         // Transfer compressed NFT
         // TODO
@@ -478,8 +510,12 @@ pub fn handler<'info>(
     // Transfer payment
     ctx.accounts
         .transfer_payment(signer_seeds, is_buy, seller_received_amount)?;
-    ctx.accounts
-        .transfer_fee(signer_seeds, is_buy, fee_amount)?;
+    ctx.accounts.transfer_fee(
+        signer_seeds,
+        fee_accounts.to_vec(),
+        is_buy,
+        fee_amounts.to_vec(),
+    )?;
 
     ctx.accounts.unwrap_sol_if_needed(is_buy)?;
 

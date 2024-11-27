@@ -1,8 +1,16 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{associated_token::AssociatedToken, token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked}};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked},
+};
 
-
-use crate::{state::*, utils::{create_ata, invoke_unwrap_sol, invoke_wrap_sol, UnwrapSolAccounts, WrapSolAccounts, WSOL_MINT}};
+use crate::{
+    state::*,
+    utils::{
+        create_ata, invoke_unwrap_sol, invoke_wrap_sol, UnwrapSolAccounts, WrapSolAccounts,
+        WSOL_MINT,
+    },
+};
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct BidData {
@@ -65,7 +73,7 @@ impl<'info> BidNft<'info> {
                 to: self.order_payment_ta.to_account_info(),
                 authority: self.initializer.to_account_info(),
                 mint: self.payment_mint.to_account_info(),
-            }
+            },
         );
         transfer_checked(cpi_ctx, amount, self.payment_mint.decimals)
     }

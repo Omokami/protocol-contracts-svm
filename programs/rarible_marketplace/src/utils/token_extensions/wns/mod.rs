@@ -1,7 +1,10 @@
-use anchor_lang::prelude::*;
-use anchor_spl::{token_2022::spl_token_2022::extension::group_member_pointer::GroupMemberPointer, token_interface::get_mint_extension_data};
-use wen_new_standard::TokenGroupMember;
 use crate::errors::MarketError;
+use anchor_lang::prelude::*;
+use anchor_spl::{
+    token_2022::spl_token_2022::extension::group_member_pointer::GroupMemberPointer,
+    token_interface::get_mint_extension_data,
+};
+use wen_new_standard::TokenGroupMember;
 
 pub struct WnsApprovalAccounts<'info> {
     pub approval_account: AccountInfo<'info>,
@@ -11,10 +14,16 @@ pub struct WnsApprovalAccounts<'info> {
     pub payment_mint: AccountInfo<'info>,
 }
 
-pub fn verify_wns_mint<'info>(mint: AccountInfo<'info>, wns_member_acc: AccountInfo<'info>, market_id: Pubkey) -> Result<()> {
-    let group_info: GroupMemberPointer = get_mint_extension_data::<GroupMemberPointer>(&mint).unwrap();
+pub fn verify_wns_mint<'info>(
+    mint: AccountInfo<'info>,
+    wns_member_acc: AccountInfo<'info>,
+    market_id: Pubkey,
+) -> Result<()> {
+    let group_info: GroupMemberPointer =
+        get_mint_extension_data::<GroupMemberPointer>(&mint).unwrap();
 
-    let wns_member = TokenGroupMember::deserialize(&mut &wns_member_acc.to_account_info().data.borrow()[8..])?;
+    let wns_member =
+        TokenGroupMember::deserialize(&mut &wns_member_acc.to_account_info().data.borrow()[8..])?;
     let group_id = wns_member.group;
     let member_mint = wns_member.mint;
 

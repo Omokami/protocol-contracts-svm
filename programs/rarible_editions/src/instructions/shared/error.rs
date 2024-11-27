@@ -1,9 +1,7 @@
-
 use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum SharedError {
-
     // 6000
     #[msg("Numeric overflow")]
     NumericalOverflow,
@@ -21,67 +19,66 @@ pub enum SharedError {
     InvalidBump,
 
     // 6004
-    #[msg("Missing master edition for NFT")]    
+    #[msg("Missing master edition for NFT")]
     MissingMasterEditionForNft,
 
-     // 6005
-     #[msg("Token account not empty")]    
-     TokenAccountNotEmpty,
+    // 6005
+    #[msg("Token account not empty")]
+    TokenAccountNotEmpty,
 
-     // 6006 
-     #[msg("Missing token account")]
-     MissingTokenAccount,
-     
-     // 6006 
-     #[msg("Missing destination account")]
-     MissingDestinationAccount,
+    // 6006
+    #[msg("Missing token account")]
+    MissingTokenAccount,
 
-     #[msg("Bad treasury")]
-     BadTreasury,
-     
-     #[msg("Bad owner")]
-     BadOwner,
+    // 6006
+    #[msg("Missing destination account")]
+    MissingDestinationAccount,
 
-     #[msg("Bad mint")]
-     BadMint,
+    #[msg("Bad treasury")]
+    BadTreasury,
 
-     #[msg("Bad mint on token account")]
-     BadTokenAccountMint,
+    #[msg("Bad owner")]
+    BadOwner,
 
-     #[msg("Bad owner of token account")]
-     BadTokenAccountOwner,
+    #[msg("Bad mint")]
+    BadMint,
 
-     #[msg("Bad token account")]
-     BadTokenAccount,
+    #[msg("Bad mint on token account")]
+    BadTokenAccountMint,
 
-     #[msg("Insufficient funds")]
-     InsufficientFunds,
+    #[msg("Bad owner of token account")]
+    BadTokenAccountOwner,
 
-     #[msg("Invalid token account")]
-     InvalidTokenAccount,
+    #[msg("Bad token account")]
+    BadTokenAccount,
 
-     #[msg("Instruction build error")]
-     InstructionBuildError,
+    #[msg("Insufficient funds")]
+    InsufficientFunds,
 
-     #[msg("Unexpected token type")]
-     UnexpectedTokenType,
+    #[msg("Invalid token account")]
+    InvalidTokenAccount,
 
-     #[msg("When transferring a pNFT, the amount must be 1")]
-     CannotTransferMultiplePnfts,
+    #[msg("Instruction build error")]
+    InstructionBuildError,
 
-     #[msg("Must transfer auth seeds for native sol")]
-     NativeSolAuthSeedsNotSpecified,
+    #[msg("Unexpected token type")]
+    UnexpectedTokenType,
 
-     #[msg("Missing token record")]
-     MissingTokenRecord,
+    #[msg("When transferring a pNFT, the amount must be 1")]
+    CannotTransferMultiplePnfts,
 
+    #[msg("Must transfer auth seeds for native sol")]
+    NativeSolAuthSeedsNotSpecified,
 
-     #[msg("Instruction builder failed")]
-     InstructionBuilderFailed,
+    #[msg("Missing token record")]
+    MissingTokenRecord,
 
-     #[msg("Spl conversion not allowed")]
-     SplConversionNotAllowed,
+    #[msg("Instruction builder failed")]
+    InstructionBuilderFailed,
 
-     #[msg("This deployment requires the creator to co-sign")]
-     InvalidCreatorCosigner
+    #[msg("Spl conversion not allowed")]
+    SplConversionNotAllowed,
+
+    #[msg("This deployment requires the creator to co-sign")]
+    InvalidCreatorCosigner,
 }

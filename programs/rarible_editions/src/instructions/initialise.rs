@@ -1,6 +1,9 @@
-use crate::{group_extension_program, utils::update_account_lamports_to_minimum_balance, EditionsDeployment, Hashlist, NAME_LIMIT, URI_LIMIT, SYMBOL_LIMIT};
-use anchor_lang::prelude::*;
 use crate::shared::{create_token_2022_and_metadata, MintAccounts2022, TokenGroupInput};
+use crate::{
+    group_extension_program, utils::update_account_lamports_to_minimum_balance, EditionsDeployment,
+    Hashlist, NAME_LIMIT, SYMBOL_LIMIT, URI_LIMIT,
+};
+use anchor_lang::prelude::*;
 use solana_program::system_program;
 use spl_pod::optional_keys::OptionalNonZeroPubkey;
 use spl_token_metadata_interface::state::TokenMetadata;
@@ -14,18 +17,18 @@ pub struct InitialiseInput {
     pub creator_cosign_program_id: Option<Pubkey>,
     // add curlies if you want this to be created dynamically. For example
     // ipfs://pippo/{} -> turns into ipfs://pippo/1, ipfs://pippo/2, etc
-    // without curlies the url is the same for all mints 
-    pub item_base_uri: String, 
+    // without curlies the url is the same for all mints
+    pub item_base_uri: String,
     // add curlies if you want this to be created dynamically. For example
     // hippo #{} -> turns into hippo #0, hippo #1, etc
-    // without curlies the url is the same for all mints 
+    // without curlies the url is the same for all mints
     pub item_base_name: String,
 }
 
 #[derive(Accounts)]
 #[instruction(input: InitialiseInput)]
 pub struct InitialiseCtx<'info> {
-    #[account(init, payer = payer, space = 8 + EditionsDeployment::INIT_SPACE, 
+    #[account(init, payer = payer, space = 8 + EditionsDeployment::INIT_SPACE,
         seeds = ["editions_deployment".as_ref(), input.symbol.as_ref()], bump)]
     pub editions_deployment: Account<'info, EditionsDeployment>,
 
@@ -91,23 +94,25 @@ pub fn initialise(ctx: Context<InitialiseCtx>, input: InitialiseInput) -> Result
         }
     };
 
-    ctx.accounts.editions_deployment.set_inner(EditionsDeployment {
-        creator: ctx.accounts.creator.key(),
-        max_number_of_tokens: input.max_number_of_tokens,
-        number_of_tokens_issued: 0,
-        group_mint: group_mint.key(),
-        group: group.key(),
-        cosigner_program_id: match input.creator_cosign_program_id {
-            Some(x) => x,
-            _ => system_program::ID
-        },
-        symbol: input.symbol,
-        item_base_name: input.item_base_name,
-        item_base_uri: input.item_base_uri,
-        item_name_is_template,
-        item_uri_is_template,
-        padding: [0; 98],
-    });
+    ctx.accounts
+        .editions_deployment
+        .set_inner(EditionsDeployment {
+            creator: ctx.accounts.creator.key(),
+            max_number_of_tokens: input.max_number_of_tokens,
+            number_of_tokens_issued: 0,
+            group_mint: group_mint.key(),
+            group: group.key(),
+            cosigner_program_id: match input.creator_cosign_program_id {
+                Some(x) => x,
+                _ => system_program::ID,
+            },
+            symbol: input.symbol,
+            item_base_name: input.item_base_name,
+            item_base_uri: input.item_base_uri,
+            item_name_is_template,
+            item_uri_is_template,
+            padding: [0; 98],
+        });
 
     let editions_deployment = &ctx.accounts.editions_deployment;
     let payer = &ctx.accounts.payer;
@@ -145,7 +150,7 @@ pub fn initialise(ctx: Context<InitialiseCtx>, input: InitialiseInput) -> Result
             group: group.to_account_info(),
             max_size: match editions_deployment.max_number_of_tokens {
                 0 => u32::MAX,
-                _ => editions_deployment.max_number_of_tokens as u32
+                _ => editions_deployment.max_number_of_tokens as u32,
             },
         }),
         None,

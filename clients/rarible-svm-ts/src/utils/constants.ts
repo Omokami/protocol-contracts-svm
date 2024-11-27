@@ -1,6 +1,6 @@
 import {PublicKey} from '@solana/web3.js';
 
-export const marketplaceProgramId = new PublicKey('B6ckscvApoZpBZ7cKGYa4VK4vTc1x9XjPk6osKfK7rSZ');
+export const marketplaceProgramId = new PublicKey('4NSuQ6U7QdVqCW5gJY4a2U6X7s2qNvrUQUwTMsf6HARG');
 
 // WNS PIDS
 export const wnsDistributionProgramId = new PublicKey('diste3nXmK7ddDTs1zb6uday6j4etCa9RChD8fJ1xay');

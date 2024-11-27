@@ -4,9 +4,9 @@ use anchor_spl::token_interface::{
     Mint, Token2022, TokenMetadataUpdateField, TransferHookUpdate,
 };
 
-use crate::{EditionsDeployment, UpdateRoyaltiesArgs, ROYALTY_BASIS_POINTS_FIELD};
 use crate::errors::MetadataErrors;
-use crate::utils::{update_account_lamports_to_minimum_balance};
+use crate::utils::update_account_lamports_to_minimum_balance;
+use crate::{EditionsDeployment, UpdateRoyaltiesArgs, ROYALTY_BASIS_POINTS_FIELD};
 
 #[derive(Accounts)]
 #[instruction(args: UpdateRoyaltiesArgs)]
@@ -38,7 +38,12 @@ pub struct AddRoyalties<'info> {
 }
 
 impl<'info> AddRoyalties<'info> {
-    fn update_token_metadata_field(&self, field: Field, value: String, bump_edition: u8) -> ProgramResult {
+    fn update_token_metadata_field(
+        &self,
+        field: Field,
+        value: String,
+        bump_edition: u8,
+    ) -> ProgramResult {
         let deployment_seeds: &[&[u8]] = &[
             "editions_deployment".as_bytes(),
             self.editions_deployment.symbol.as_ref(),
@@ -51,7 +56,11 @@ impl<'info> AddRoyalties<'info> {
             metadata: self.mint.to_account_info(),
             update_authority: self.editions_deployment.to_account_info(),
         };
-        let cpi_ctx = CpiContext::new_with_signer(self.token_program.to_account_info(), cpi_accounts, signer_seeds);
+        let cpi_ctx = CpiContext::new_with_signer(
+            self.token_program.to_account_info(),
+            cpi_accounts,
+            signer_seeds,
+        );
         token_metadata_update_field(cpi_ctx, field, value)?;
         Ok(())
     }

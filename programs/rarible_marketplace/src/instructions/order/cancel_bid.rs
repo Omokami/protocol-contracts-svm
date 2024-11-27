@@ -1,7 +1,13 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{associated_token::AssociatedToken, token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked}};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked},
+};
 
-use crate::{state::*, utils::{create_ata, get_bump_in_seed_form, invoke_unwrap_sol, UnwrapSolAccounts, WSOL_MINT}};
+use crate::{
+    state::*,
+    utils::{create_ata, get_bump_in_seed_form, invoke_unwrap_sol, UnwrapSolAccounts, WSOL_MINT},
+};
 
 #[derive(Accounts)]
 #[instruction()]
@@ -47,7 +53,11 @@ pub struct CancelBid<'info> {
 
 impl<'info> CancelBid<'info> {
     fn transfer_payment(&self, signer_seeds: &[&[&[u8]]], amount: u64) -> Result<()> {
-        msg!("{:?} -- {:?}", amount,  self.order_payment_ta.key().to_string());
+        msg!(
+            "{:?} -- {:?}",
+            amount,
+            self.order_payment_ta.key().to_string()
+        );
         let cpi_ctx = CpiContext::new_with_signer(
             self.payment_token_program.to_account_info(),
             TransferChecked {
@@ -56,7 +66,7 @@ impl<'info> CancelBid<'info> {
                 authority: self.order.to_account_info(),
                 mint: self.payment_mint.to_account_info(),
             },
-            signer_seeds
+            signer_seeds,
         );
         transfer_checked(cpi_ctx, amount, self.payment_mint.decimals)
     }
@@ -89,9 +99,20 @@ pub fn handler(ctx: Context<CancelBid>) -> Result<()> {
         &ctx.accounts.payment_token_program.to_account_info(),
     )?;
 
-    let signer_seeds: &[&[&[u8]]; 1] = &[&[ORDER_SEED, ctx.accounts.order.nonce.as_ref(), ctx.accounts.order.market.as_ref(), ctx.accounts.order.owner.as_ref(), bump][..]];
+    let signer_seeds: &[&[&[u8]]; 1] = &[&[
+        ORDER_SEED,
+        ctx.accounts.order.nonce.as_ref(),
+        ctx.accounts.order.market.as_ref(),
+        ctx.accounts.order.owner.as_ref(),
+        bump,
+    ][..]];
 
-    let bid_value = ctx.accounts.order.size.checked_mul(ctx.accounts.order.price).unwrap();
+    let bid_value = ctx
+        .accounts
+        .order
+        .size
+        .checked_mul(ctx.accounts.order.price)
+        .unwrap();
     // TODO Transfer funds out
     ctx.accounts.transfer_payment(signer_seeds, bid_value)?;
     emit_cpi!(Order::get_edit_event(

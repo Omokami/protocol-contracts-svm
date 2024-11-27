@@ -4,8 +4,8 @@ use crate::state::*;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct InitMarketParams {
-    pub fee_recipient: Pubkey,
-    pub fee_bps: u64,
+    pub fee_recipients: [Pubkey; 3],
+    pub fee_bps: [u64; 3],
 }
 
 #[derive(Accounts)]
@@ -36,7 +36,7 @@ pub fn handler(ctx: Context<InitMarket>, params: InitMarketParams) -> Result<()>
         &mut ctx.accounts.market,
         ctx.accounts.market_identifier.key(),
         ctx.accounts.initializer.key(),
-        params.fee_recipient,
+        params.fee_recipients,
         params.fee_bps,
     );
 

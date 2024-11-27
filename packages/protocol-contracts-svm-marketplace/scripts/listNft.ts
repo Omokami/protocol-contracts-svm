@@ -5,8 +5,8 @@ const demoMarket = {
     marketIdentifier: new PublicKey("5hHaru7wRzFzHs9Fm7DK2vCXEC6v8zN9xutXYLHpEqG"),
     wnsGroupMint: "EXJB8YFiBpFeBbjq9PZhCsav2RfcZVeuBvT9t3jBuY5f",
     paymentMint: "So11111111111111111111111111111111111111112",
-    feeRecipient: "yaoYaopKcDsMxnjbT1jBdvYz6XRmjPdAPHczsCraERc",
-    feeBps: 250
+    feeRecipients: ["yaoYaopKcDsMxnjbT1jBdvYz6XRmjPdAPHczsCraERc", "9xakHBpJ8gQTi4NYKyLhUm786e4sEeWxMQPz2ph7SPLt", "CQMFZGhqvt87nhqRo6eEq3TDHCUbU4mzmpVooR2M6So1"],
+    feeBps: [250, 150, 100]
 };
 
 const mintsToVerify = ["4swpX19vkSyd2TLM2W2FcsHorkvh25aEg4b35H4Vf2Wv", "71xkPoBLf5DRmCkPJo9czuNL3docUuweeDARABcNsaVy", "CchC7gtAUL1bDbuomRkjupySAZcMAygRb983r3qnkXFv"];
@@ -40,8 +40,8 @@ const nftToSell = "CchC7gtAUL1bDbuomRkjupySAZcMAygRb983r3qnkXFv";
 
 async function setupMarket() {
     const provider = getProvider();
-    const { marketIdentifier, feeBps, feeRecipient } = demoMarket;
-    const createMarketIx = await getInitializeMarket(provider, { marketIdentifier: marketIdentifier.toString(), feeBps, feeRecipient: feeRecipient });
+    const { marketIdentifier, feeBps, feeRecipients } = demoMarket;
+    const createMarketIx = await getInitializeMarket(provider, { marketIdentifier: marketIdentifier.toString(), feeBps, feeRecipients });
     const recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
     const message = MessageV0.compile({ payerKey: provider.publicKey, instructions: [createMarketIx], recentBlockhash, })
     const tx = new VersionedTransaction(message);
@@ -194,8 +194,8 @@ async function buyNft() {
     for (let i = 0; i < activeOrders.length; i++) {
         console.log(activeOrders[i].account.price.toNumber(), activeOrders[i].account.nftMint.toString())
     }
-    const floorNft = activeOrders.filter(o => o.account.side == 1).pop();
-    console.log(floorNft.account.price.toNumber(), floorNft.account.nftMint.toString())
+    const floorNft = activeOrders.filter(o => o.account.side == 1 && o.account.nftMint.toString() == "2RdFkcThfSX4ymoYEuzLLPCgTY6Dd4KMj3Mq8PnpeTWZ").pop();
+    console.log(floorNft)
     if (floorNft !== undefined) {
         const buyNftIx = await fillOrder(provider, floorNft.publicKey.toString(), 1, floorNft.account.nftMint.toString(), wnsParams);
         
@@ -272,7 +272,7 @@ async function cancelBids() {
 // verifyMints();
 // listNfts();
 // bid();
-sellNft();
-// buyNft();
+// sellNft();
+buyNft();
 // cancelListings();
 // cancelBids();

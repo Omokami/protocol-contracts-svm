@@ -88,5 +88,4 @@ pub enum EditionsControlsError {
 
     #[msg("Exceeded wallet max mints for the collection")]
     ExceededWalletMaxMintsForCollection,
-
 }

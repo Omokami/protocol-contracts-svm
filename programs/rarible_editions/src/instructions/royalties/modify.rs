@@ -5,6 +5,9 @@ use anchor_lang::{
     solana_program::{entrypoint::ProgramResult, program::invoke},
 };
 
+use crate::errors::MetadataErrors;
+use crate::utils::update_account_lamports_to_minimum_balance;
+use crate::{EditionsDeployment, UpdateRoyaltiesArgs, ROYALTY_BASIS_POINTS_FIELD};
 use anchor_spl::token_interface::{
     spl_token_2022::{
         extension::{BaseStateWithExtensions, StateWithExtensions},
@@ -16,9 +19,6 @@ use anchor_spl::token_interface::{
     token_metadata_update_field, Mint, Token2022, TokenMetadataUpdateField,
 };
 use solana_program::program::invoke_signed;
-use crate::{EditionsDeployment, UpdateRoyaltiesArgs, ROYALTY_BASIS_POINTS_FIELD};
-use crate::errors::MetadataErrors;
-use crate::utils::update_account_lamports_to_minimum_balance;
 
 #[derive(Accounts)]
 #[instruction(args: UpdateRoyaltiesArgs)]
@@ -41,7 +41,12 @@ pub struct ModifyRoyalties<'info> {
 }
 
 impl<'info> ModifyRoyalties<'info> {
-    fn update_token_metadata_field(&self, field: Field, value: String, bump_edition: u8) -> ProgramResult {
+    fn update_token_metadata_field(
+        &self,
+        field: Field,
+        value: String,
+        bump_edition: u8,
+    ) -> ProgramResult {
         let deployment_seeds: &[&[u8]] = &[
             "editions_deployment".as_bytes(),
             self.editions_deployment.symbol.as_ref(),
@@ -54,7 +59,11 @@ impl<'info> ModifyRoyalties<'info> {
             metadata: self.mint.to_account_info().clone(),
             update_authority: self.editions_deployment.to_account_info(),
         };
-        let cpi_ctx = CpiContext::new_with_signer(self.token_program.to_account_info(), cpi_accounts, signer_seeds);
+        let cpi_ctx = CpiContext::new_with_signer(
+            self.token_program.to_account_info(),
+            cpi_accounts,
+            signer_seeds,
+        );
         token_metadata_update_field(cpi_ctx, field, value)?;
         Ok(())
     }
@@ -79,7 +88,7 @@ impl<'info> ModifyRoyalties<'info> {
                 self.mint.to_account_info(),
                 self.editions_deployment.to_account_info(),
             ],
-            signer_seeds
+            signer_seeds,
         )?;
 
         Ok(())
@@ -107,7 +116,10 @@ pub fn handler(ctx: Context<ModifyRoyalties>, args: UpdateRoyaltiesArgs) -> Resu
     );
 
     // Log updating the token metadata field for royalty basis points
-    msg!("royalties::handler::update_royalty_basis_points: {}", args.royalty_basis_points);
+    msg!(
+        "royalties::handler::update_royalty_basis_points: {}",
+        args.royalty_basis_points
+    );
     ctx.accounts.update_token_metadata_field(
         Field::Key(ROYALTY_BASIS_POINTS_FIELD.to_owned()),
         args.royalty_basis_points.to_string(),
@@ -120,14 +132,22 @@ pub fn handler(ctx: Context<ModifyRoyalties>, args: UpdateRoyaltiesArgs) -> Resu
     msg!("royalties::handler::update_creators_metadata");
     for creator in args.creators.clone() {
         // Log the creator's address and share
-        msg!("royalties::handler::creator: address={}, share={}", creator.address, creator.share);
+        msg!(
+            "royalties::handler::creator: address={}, share={}",
+            creator.address,
+            creator.share
+        );
 
         total_share = total_share
             .checked_add(creator.share)
             .ok_or(MetadataErrors::CreatorShareInvalid)?;
 
         // Log updating creator metadata field
-        msg!("royalties::handler::update_creator_field: address={}, share={}", creator.address, creator.share);
+        msg!(
+            "royalties::handler::update_creator_field: address={}, share={}",
+            creator.address,
+            creator.share
+        );
         ctx.accounts.update_token_metadata_field(
             Field::Key(creator.address.to_string()),
             creator.share.to_string(),
@@ -156,7 +176,8 @@ pub fn handler(ctx: Context<ModifyRoyalties>, args: UpdateRoyaltiesArgs) -> Resu
                 if !creators.iter().any(|creator| creator.address == parsed_key) {
                     // Log removal of old metadata field
                     msg!("royalties::handler::remove_field: {}", key);
-                    ctx.accounts.remove_token_metadata_field(key, ctx.bumps.editions_deployment)?;
+                    ctx.accounts
+                        .remove_token_metadata_field(key, ctx.bumps.editions_deployment)?;
                 }
             }
             Err(_) => {
@@ -179,4 +200,3 @@ pub fn handler(ctx: Context<ModifyRoyalties>, args: UpdateRoyaltiesArgs) -> Resu
 
     Ok(())
 }
-

@@ -1,7 +1,7 @@
-use anchor_lang::prelude::*;
-use rarible_editions::program::RaribleEditions;
-use libreplex_shared::wrapped_sol;
 use crate::{EditionsControls, Phase};
+use anchor_lang::prelude::*;
+use libreplex_shared::wrapped_sol;
+use rarible_editions::program::RaribleEditions;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct UpdatePlatformFeeSecondaryAdminInput {
@@ -27,7 +27,10 @@ pub struct UpdatePlatformFeeSecondaryAdminCtx<'info> {
     pub creator: Signer<'info>,
 }
 
-pub fn update_platform_fee_secondary_admin(ctx: Context<UpdatePlatformFeeSecondaryAdminCtx>, input: UpdatePlatformFeeSecondaryAdminInput) -> Result<()> {
+pub fn update_platform_fee_secondary_admin(
+    ctx: Context<UpdatePlatformFeeSecondaryAdminCtx>,
+    input: UpdatePlatformFeeSecondaryAdminInput,
+) -> Result<()> {
     let editions_controls = &mut ctx.accounts.editions_controls;
     editions_controls.platform_fee_secondary_admin = input.new_admin;
 

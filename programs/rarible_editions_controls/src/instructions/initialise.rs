@@ -1,9 +1,15 @@
+use crate::errors::EditionsControlsError;
+use crate::{
+    EditionsControls, PlatformFeeRecipient, UpdatePlatformFeeArgs,
+    DEFAULT_PLATFORM_FEE_PRIMARY_ADMIN, DEFAULT_PLATFORM_FEE_SECONDARY_ADMIN,
+};
 use anchor_lang::{prelude::*, system_program};
-use rarible_editions::{cpi::accounts::InitialiseCtx, group_extension_program, program::RaribleEditions, AddMetadataArgs, CreatorWithShare, InitialiseInput, UpdateRoyaltiesArgs};
 use rarible_editions::cpi::accounts::AddMetadata;
 use rarible_editions::cpi::accounts::AddRoyalties;
-use crate::{EditionsControls, PlatformFeeRecipient, UpdatePlatformFeeArgs, DEFAULT_PLATFORM_FEE_PRIMARY_ADMIN, DEFAULT_PLATFORM_FEE_SECONDARY_ADMIN};
-use crate::errors::EditionsControlsError;
+use rarible_editions::{
+    cpi::accounts::InitialiseCtx, group_extension_program, program::RaribleEditions,
+    AddMetadataArgs, CreatorWithShare, InitialiseInput, UpdateRoyaltiesArgs,
+};
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct InitialiseControlInput {
@@ -18,7 +24,7 @@ pub struct InitialiseControlInput {
     pub extra_meta: Vec<AddMetadataArgs>,
     pub item_base_uri: String,
     pub item_base_name: String,
-    pub platform_fee: UpdatePlatformFeeArgs
+    pub platform_fee: UpdatePlatformFeeArgs,
 }
 
 #[derive(Accounts)]
@@ -92,7 +98,7 @@ pub fn initialise_editions_controls(
         collection_uri: input.collection_uri,
         creator_cosign_program_id: Some(crate::ID),
         item_base_name: input.item_base_name,
-        item_base_uri: input.item_base_uri
+        item_base_uri: input.item_base_uri,
     };
 
     // Initialize the editions using CPI
@@ -190,7 +196,7 @@ pub fn initialise_editions_controls(
                 mint: group_mint.to_account_info(),
                 signer: editions_controls.to_account_info(),
             },
-            &[seeds]
+            &[seeds],
         ),
         input.royalties,
     )?;
@@ -207,7 +213,7 @@ pub fn initialise_editions_controls(
                 mint: group_mint.to_account_info(),
                 signer: editions_controls.to_account_info(),
             },
-            &[seeds]
+            &[seeds],
         ),
         input.extra_meta,
     )?;

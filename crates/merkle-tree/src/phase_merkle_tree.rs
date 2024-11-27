@@ -11,9 +11,9 @@ use serde::{Deserialize, Serialize};
 use solana_program::{hash::hashv, pubkey::Pubkey};
 
 use crate::{
-    phase_csv_entry::PhaseCsvEntry,
     error::{MerkleTreeError, MerkleTreeError::MerkleValidationError},
     merkle_tree::MerkleTree,
+    phase_csv_entry::PhaseCsvEntry,
     phase_tree_node::PhaseTreeNode,
     utils::{get_max_total_claim, get_proof},
 };
@@ -80,7 +80,8 @@ impl PhaseMerkleTree {
     /// Load a merkle tree from a csv path
     pub fn new_from_csv(path: &PathBuf) -> Result<Self> {
         let csv_entries = PhaseCsvEntry::new_from_file(path)?;
-        let tree_nodes: Vec<PhaseTreeNode> = csv_entries.into_iter().map(PhaseTreeNode::from).collect();
+        let tree_nodes: Vec<PhaseTreeNode> =
+            csv_entries.into_iter().map(PhaseTreeNode::from).collect();
         let tree = Self::new(tree_nodes)?;
         Ok(tree)
     }
@@ -284,7 +285,8 @@ mod tests {
         let path = PathBuf::from("test/merkle_tree.json");
 
         merkle_distributor_info.write_to_file(&path);
-        let merkle_distributor_read: PhaseMerkleTree = PhaseMerkleTree::new_from_file(&path).unwrap();
+        let merkle_distributor_read: PhaseMerkleTree =
+            PhaseMerkleTree::new_from_file(&path).unwrap();
 
         assert_eq!(merkle_distributor_read.tree_nodes.len(), 3);
     }

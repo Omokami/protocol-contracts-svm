@@ -44,18 +44,18 @@ pub struct EditionsDeployment {
     pub item_name_is_template: bool,
 
     pub item_uri_is_template: bool,
-    
-    pub padding: [u8; 98]
+
+    pub padding: [u8; 98],
 }
 
-// slightly more extended 
+// slightly more extended
 #[account]
 pub struct HashlistMarker {
     pub editions_deployment: Pubkey,
-    pub mint: Pubkey
+    pub mint: Pubkey,
 }
 
-impl HashlistMarker{
+impl HashlistMarker {
     pub const SIZE: usize = 8 + 32 + 32;
 }
 
@@ -71,5 +71,3 @@ pub struct Hashlist {
     pub deployment: Pubkey,
     pub issues: Vec<MintAndOrder>,
 }
-
-

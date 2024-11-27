@@ -1,13 +1,9 @@
-use crate::{APPROVE_ACCOUNT_SEED};
+use crate::APPROVE_ACCOUNT_SEED;
 use anchor_lang::{
     prelude::Result,
     solana_program::{
-        account_info::AccountInfo,
-        program::invoke,
-        pubkey::Pubkey,
-        rent::Rent,
-        system_instruction::transfer,
-        sysvar::Sysvar,
+        account_info::AccountInfo, program::invoke, pubkey::Pubkey, rent::Rent,
+        system_instruction::transfer, sysvar::Sysvar,
     },
     Lamports,
 };
@@ -20,7 +16,7 @@ use anchor_spl::token_interface::{
     },
     spl_token_metadata_interface::state::TokenMetadata,
 };
-use spl_tlv_account_resolution::{account::ExtraAccountMeta};
+use spl_tlv_account_resolution::account::ExtraAccountMeta;
 
 pub fn update_account_lamports_to_minimum_balance<'info>(
     account: AccountInfo<'info>,

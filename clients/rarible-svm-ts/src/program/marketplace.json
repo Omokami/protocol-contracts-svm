@@ -1,5 +1,5 @@
 {
-  "address": "B6ckscvApoZpBZ7cKGYa4VK4vTc1x9XjPk6osKfK7rSZ",
+  "address": "4NSuQ6U7QdVqCW5gJY4a2U6X7s2qNvrUQUwTMsf6HARG",
   "metadata": {
     "name": "marketplace",
     "version": "0.1.0",
@@ -83,60 +83,7 @@
         },
         {
           "name": "initializer_payment_ta",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "initializer"
-              },
-              {
-                "kind": "account",
-                "path": "payment_token_program"
-              },
-              {
-                "kind": "account",
-                "path": "payment_mint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
+          "writable": true
         },
         {
           "name": "order_payment_ta",
@@ -335,60 +282,7 @@
         },
         {
           "name": "initializer_payment_ta",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "initializer"
-              },
-              {
-                "kind": "account",
-                "path": "payment_token_program"
-              },
-              {
-                "kind": "account",
-                "path": "payment_mint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
+          "writable": true
         },
         {
           "name": "order_payment_ta",
@@ -725,14 +619,6 @@
         },
         {
           "name": "buyer_nft_ta",
-          "writable": true
-        },
-        {
-          "name": "fee_recipient",
-          "writable": true
-        },
-        {
-          "name": "fee_recipient_ta",
           "writable": true
         },
         {
@@ -1295,12 +1181,22 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "fee_recipient",
-            "type": "pubkey"
+            "name": "fee_recipients",
+            "type": {
+              "array": [
+                "pubkey",
+                3
+              ]
+            }
           },
           {
             "name": "fee_bps",
-            "type": "u64"
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
           }
         ]
       }
@@ -1363,18 +1259,28 @@
             "type": "u8"
           },
           {
-            "name": "fee_recipient",
+            "name": "fee_recipients",
             "docs": [
               "address that should receive market fees"
             ],
-            "type": "pubkey"
+            "type": {
+              "array": [
+                "pubkey",
+                3
+              ]
+            }
           },
           {
             "name": "fee_bps",
             "docs": [
               "fee basis points"
             ],
-            "type": "u64"
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
           },
           {
             "name": "reserve",
@@ -1422,11 +1328,21 @@
           },
           {
             "name": "fee_recipient",
-            "type": "string"
+            "type": {
+              "array": [
+                "string",
+                3
+              ]
+            }
           },
           {
             "name": "fee_bps",
-            "type": "u64"
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
           }
         ]
       }

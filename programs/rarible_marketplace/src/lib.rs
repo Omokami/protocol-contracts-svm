@@ -8,7 +8,7 @@ pub mod utils;
 use instructions::*;
 
 // rAREXWkxUP9Cr91tRVJ29NumDAEKvNpDWZNqcfSwBNG - program id
-declare_id!("Rarim7DMoD45z1o25QWPsWvTdFSSEdxaxriwWZLLTic");
+declare_id!("4NSuQ6U7QdVqCW5gJY4a2U6X7s2qNvrUQUwTMsf6HARG");
 
 #[program]
 pub mod marketplace {

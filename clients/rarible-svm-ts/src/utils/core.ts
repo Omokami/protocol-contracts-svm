@@ -119,6 +119,31 @@ export type WnsAccountParams = {
 	paymentMint: string;
 };
 
+export const getFeeAccountsFromMarket = (paymentMint: PublicKey, paymentTokenProgram: PublicKey, marketAccount: any) => {
+	const feeRecipients = marketAccount.feeRecipients;
+	const feeTas = feeRecipients.map((f) => getAtaAddress(paymentMint.toString(), f.toString(), paymentTokenProgram.toString()));
+
+	let remainingAccounts: AccountMeta[] = [];
+	for(let i = 0; i < feeRecipients.length; i++) {
+		remainingAccounts.push(
+			...[
+				{
+					pubkey: feeRecipients[i],
+					isWritable: true,
+					isSigner: false,
+				},
+				{
+					pubkey: feeTas[i],
+					isWritable: true,
+					isSigner: false,
+				},
+		]);
+	}
+
+	
+	return remainingAccounts;
+}
+
 export const getRemainingAccountsForMint = async (provider: Provider, mint: string, wnsParams: WnsAccountParams | undefined) => {
 	const remainingAccounts: AccountMeta[] = [];
 
@@ -261,3 +286,4 @@ export const getGroupMemberAccount = (nftMint: string) => {
 
 	return groupMemberAccount;
 };
+

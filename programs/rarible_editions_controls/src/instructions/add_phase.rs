@@ -1,17 +1,17 @@
 use anchor_lang::prelude::*;
-use rarible_editions::program::RaribleEditions;
 use libreplex_shared::wrapped_sol;
+use rarible_editions::program::RaribleEditions;
 
 use crate::{EditionsControls, Phase};
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct InitialisePhaseInput {
-    pub price_amount: u64, 
+    pub price_amount: u64,
     pub price_token: Pubkey,
-    pub start_time: i64, 
+    pub start_time: i64,
     pub max_mints_per_wallet: u64,
     pub max_mints_total: u64,
-    pub end_time: i64, 
+    pub end_time: i64,
     pub is_private: bool,
     pub merkle_root: Option<[u8; 32]>,
 }
@@ -41,7 +41,7 @@ pub struct AddPhaseCtx<'info> {
     #[account(address = spl_token_2022::ID)]
     pub token_program: AccountInfo<'info>,
 
-    pub rarible_editions_program: Program<'info, RaribleEditions>
+    pub rarible_editions_program: Program<'info, RaribleEditions>,
 }
 
 pub fn add_phase(ctx: Context<AddPhaseCtx>, input: InitialisePhaseInput) -> Result<()> {
@@ -55,12 +55,12 @@ pub fn add_phase(ctx: Context<AddPhaseCtx>, input: InitialisePhaseInput) -> Resu
 
     let editions_controls = &mut ctx.accounts.editions_controls;
 
-    editions_controls.phases.push(Phase{ 
-        price_amount: input.price_amount, 
+    editions_controls.phases.push(Phase {
+        price_amount: input.price_amount,
         price_token: input.price_token,
-        start_time: input.start_time, 
+        start_time: input.start_time,
         max_mints_per_wallet: input.max_mints_per_wallet,
-        active: true,   // everything starts out as active - 
+        active: true, // everything starts out as active -
         end_time: input.end_time,
         max_mints_total: input.max_mints_total,
         current_mints: 0,

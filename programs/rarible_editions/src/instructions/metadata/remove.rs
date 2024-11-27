@@ -2,13 +2,13 @@ use std::str::FromStr;
 
 use anchor_lang::{prelude::*, solana_program::program::invoke};
 
+use crate::utils::update_account_lamports_to_minimum_balance;
+use crate::{errors::MetadataErrors, EditionsDeployment, ROYALTY_BASIS_POINTS_FIELD};
 use anchor_spl::{
     token_interface::spl_token_metadata_interface::instruction::remove_key,
     token_interface::{Mint, Token2022},
 };
 use solana_program::program::invoke_signed;
-use crate::{errors::MetadataErrors, EditionsDeployment, ROYALTY_BASIS_POINTS_FIELD};
-use crate::utils::update_account_lamports_to_minimum_balance;
 
 #[derive(AnchorDeserialize, AnchorSerialize)]
 pub struct RemoveMetadataArgs {
@@ -57,7 +57,7 @@ impl<'info> RemoveMetadata<'info> {
                 self.mint.to_account_info(),
                 self.editions_deployment.to_account_info(),
             ],
-            signer_seeds
+            signer_seeds,
         )?;
 
         Ok(())
@@ -72,8 +72,7 @@ pub fn handler(ctx: Context<RemoveMetadata>, args: Vec<RemoveMetadataArgs>) -> R
         }
 
         // Validate that the field does not start with reserved prefixes
-        if metadata_arg.field.starts_with(ROYALTY_BASIS_POINTS_FIELD)
-        {
+        if metadata_arg.field.starts_with(ROYALTY_BASIS_POINTS_FIELD) {
             return Err(MetadataErrors::InvalidField.into());
         }
 
@@ -86,8 +85,10 @@ pub fn handler(ctx: Context<RemoveMetadata>, args: Vec<RemoveMetadataArgs>) -> R
                 return Err(MetadataErrors::InvalidField.into());
             }
             Err(_) => {
-                ctx.accounts
-                    .remove_token_metadata_field(metadata_arg.field, ctx.bumps.editions_deployment)?;
+                ctx.accounts.remove_token_metadata_field(
+                    metadata_arg.field,
+                    ctx.bumps.editions_deployment,
+                )?;
             }
         }
     }

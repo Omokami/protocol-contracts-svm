@@ -24,9 +24,9 @@ pub mod group_extension_program {
 pub mod rarible_editions {
     use super::*;
 
-    // v2 endpoints. Prefer these over the original ones. 
+    // v2 endpoints. Prefer these over the original ones.
     // they allow setting of optional creator co-signer
-    // and toggling inscriptions on and off. 
+    // and toggling inscriptions on and off.
     // for now, creator co-sign is disabled but will be enabled
     // soon to allow for wrapper contracts
     pub fn initialise(ctx: Context<InitialiseCtx>, input: InitialiseInput) -> Result<()> {

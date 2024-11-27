@@ -1,11 +1,5 @@
-use anchor_lang::{
-    accounts::account::Account,
-    prelude::*,
-};
-use crate::{
-    EditionsControls,MinterStats,Phase,
-    errors::EditionsControlsError,
-};
+use crate::{errors::EditionsControlsError, EditionsControls, MinterStats, Phase};
+use anchor_lang::{accounts::account::Account, prelude::*};
 
 pub fn check_phase_constraints(
     phase: &Phase,
@@ -36,13 +30,16 @@ pub fn check_phase_constraints(
 
     /// Checks if the user has exceeded the max mints for the deployment (across all phases!)
     /// dev: notice that if max_mints_per_wallet is 0, this constraint is disabled
-    if editions_controls.max_mints_per_wallet > 0 && minter_stats.mint_count >= editions_controls.max_mints_per_wallet {
+    if editions_controls.max_mints_per_wallet > 0
+        && minter_stats.mint_count >= editions_controls.max_mints_per_wallet
+    {
         return Err(EditionsControlsError::ExceededWalletMaxMintsForCollection.into());
     }
 
     /// Checks if the user has exceeded the max mints for the current phase
     /// dev: notice that if max_mints_per_wallet is 0, this constraint is disabled
-    if phase.max_mints_per_wallet > 0 && minter_stats_phase.mint_count >= phase.max_mints_per_wallet {
+    if phase.max_mints_per_wallet > 0 && minter_stats_phase.mint_count >= phase.max_mints_per_wallet
+    {
         return Err(EditionsControlsError::ExceededWalletMaxMintsForPhase.into());
     }
 

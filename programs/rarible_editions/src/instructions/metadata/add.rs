@@ -1,6 +1,6 @@
+use crate::ROYALTY_BASIS_POINTS_FIELD;
 use anchor_lang::{prelude::*, solana_program::entrypoint::ProgramResult};
 use std::str::FromStr;
-use crate::{ROYALTY_BASIS_POINTS_FIELD};
 
 use anchor_spl::token_interface::{
     spl_token_metadata_interface::state::Field, token_metadata_update_field, Token2022,
@@ -37,7 +37,12 @@ pub struct AddMetadata<'info> {
 }
 
 impl<'info> AddMetadata<'info> {
-    fn update_token_metadata_field(&self, field: Field, value: String, bump_edition: u8) -> ProgramResult {
+    fn update_token_metadata_field(
+        &self,
+        field: Field,
+        value: String,
+        bump_edition: u8,
+    ) -> ProgramResult {
         let deployment_seeds: &[&[u8]] = &[
             "editions_deployment".as_bytes(),
             self.editions_deployment.symbol.as_ref(),
@@ -50,7 +55,11 @@ impl<'info> AddMetadata<'info> {
             update_authority: self.editions_deployment.to_account_info(),
         };
 
-        let cpi_ctx = CpiContext::new_with_signer(self.token_program.to_account_info(), cpi_accounts, signer_seeds);
+        let cpi_ctx = CpiContext::new_with_signer(
+            self.token_program.to_account_info(),
+            cpi_accounts,
+            signer_seeds,
+        );
         token_metadata_update_field(cpi_ctx, field, value)?;
         Ok(())
     }
@@ -64,8 +73,7 @@ pub fn handler(ctx: Context<AddMetadata>, args: Vec<AddMetadataArgs>) -> Result<
         }
 
         // Validate that the field does not start with reserved prefixes
-        if metadata_arg.field.starts_with(ROYALTY_BASIS_POINTS_FIELD)
-        {
+        if metadata_arg.field.starts_with(ROYALTY_BASIS_POINTS_FIELD) {
             return Err(MetadataErrors::InvalidField.into());
         }
 

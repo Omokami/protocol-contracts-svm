@@ -12,6 +12,7 @@ import {
 	getRemainingAccountsForMint,
 	type WnsAccountParams,
 	fetchMarketByAddress,
+	getFeeAccountsFromMarket,
 } from '../utils';
 
 export type CreateOrderArgs = {
@@ -129,7 +130,7 @@ export const getBid = async (provider: Provider, biddingArgs: CreateOrderArgs) =
 
 export const fillOrder = async (provider: Provider, orderAddress: string, amountToFill: number, nftMint: string, extraAccountParams: WnsAccountParams | undefined) => {
 	const marketProgram = getMarketplaceProgram(provider);
-	console.log(orderAddress);
+
 	const initializer = provider.publicKey?.toString();
 	if (!initializer) {
 		return undefined;
@@ -165,12 +166,13 @@ export const fillOrder = async (provider: Provider, orderAddress: string, amount
 	const buyerNftTa = getAtaAddress(nftMint, nftRecipient, nftTokenProgram.toString());
 	const sellerNftTa = getAtaAddress(nftMint, nftFunder, nftTokenProgram.toString());
 
-	const feeRecipient = market.feeRecipient;
-	const feeRecipientTa = getAtaAddress(order.paymentMint.toString(), feeRecipient.toString(), paymentTokenProgram.toString());
-
 	const eventAuthority = getEventAuthority();
 
-	const remainingAccounts: AccountMeta[] = await getRemainingAccountsForMint(provider, nftMint, extraAccountParams);
+	const feeRemAccs = getFeeAccountsFromMarket(order.paymentMint, paymentTokenProgram, market);
+
+	console.log({ feeRemAccs });
+	const baseRemainingAccounts: AccountMeta[] = await getRemainingAccountsForMint(provider, nftMint, extraAccountParams);
+	const remainingAccounts = [...feeRemAccs, ...baseRemainingAccounts];
 
 	const ix = await marketProgram.methods
 		.fillOrder(new BN(amountToFill))
@@ -192,9 +194,7 @@ export const fillOrder = async (provider: Provider, orderAddress: string, amount
 			eventAuthority,
 			paymentMint: order.paymentMint,
 			nftMint,
-			sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-			feeRecipient,
-			feeRecipientTa
+			sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY
 		})
 		.remainingAccounts(remainingAccounts)
 		.instruction();

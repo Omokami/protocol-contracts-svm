@@ -30,7 +30,7 @@ pub enum EditionsError {
     InvalidMetadata,
 
     #[msg("Creator fee too high")]
-    CreatorFeeTooHigh
+    CreatorFeeTooHigh,
 }
 
 #[error_code]

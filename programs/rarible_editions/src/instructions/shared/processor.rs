@@ -436,10 +436,7 @@ pub fn create_token_2022_and_metadata<'a>(
                         )?;
                     }
                     None => {
-                        invoke(
-                            &initialize_member_ix,
-                            &initialize_member_account_infos,
-                        )?;
+                        invoke(&initialize_member_ix, &initialize_member_account_infos)?;
                     }
                 }
             }

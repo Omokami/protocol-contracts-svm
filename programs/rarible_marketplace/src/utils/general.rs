@@ -1,11 +1,14 @@
 use anchor_lang::{
-    prelude::{msg, AccountInfo, Pubkey, Result}, pubkey, require, solana_program::{
+    prelude::{msg, AccountInfo, Pubkey, Result},
+    pubkey, require,
+    solana_program::{
         program::{invoke, invoke_signed},
         system_instruction::transfer,
-    }, ToAccountInfo
+    },
+    ToAccountInfo,
 };
-use anchor_spl::token::spl_token;
 use anchor_spl::associated_token::{get_associated_token_address, spl_associated_token_account};
+use anchor_spl::token::spl_token;
 use mpl_token_metadata::accounts::Metadata;
 use mpl_token_metadata::types::{AuthorizationData, TokenStandard};
 
@@ -413,7 +416,7 @@ pub fn invoke_unwrap_sol(accounts: &UnwrapSolAccounts) -> Result<()> {
                     Err(e.into())
                 }
             }
-        },
+        }
         Err(e) => {
             msg!("Error creating close account instruction: {:?}", e);
             Err(e.into())
